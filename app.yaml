@@ -1,0 +1,27 @@
+runtime: nodejs22
+
+env_variables:
+  # Baked into the client bundle at build time AND read at runtime by server
+  # components (api.ts appends /api/v1). The Firebase web config is client-only
+  # and is injected at build time by the deploy workflow.
+  NEXT_PUBLIC_API_URL: "https://api.hintder.ai"
+
+handlers:
+  # Long-cache the immutable build assets.
+  - url: /_next/static
+    static_dir: .next/static
+    secure: always
+    expiration: "365d"
+
+  # Everything else (pages, /sitemap.xml, /robots.txt, /icon.svg, /manifest.webmanifest,
+  # /opengraph-image, legal pages, guides, stories) is served by the Next.js server.
+  - url: /.*
+    script: auto
+    secure: always
+
+instance_class: F2
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 5
+  target_cpu_utilization: 0.65

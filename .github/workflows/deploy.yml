@@ -1,0 +1,68 @@
+name: Deploy to App Engine
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PROJECT_ID: hintder-ai
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for production
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.hintder.ai
+          # Firebase WEB config — public by design, baked into the client bundle.
+          NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyCgbpL0LXHY72MS8BwpadZMxg90AcezuPA
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: hintder-ai.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: hintder-ai
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: hintder-ai.firebasestorage.app
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '587342140966'
+          NEXT_PUBLIC_FIREBASE_APP_ID: 1:587342140966:web:3df63298b393c89a9fb8e7
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: G-EV5E2RC9T9
+
+      - name: Google Auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy to App Engine
+        uses: google-github-actions/deploy-appengine@v2
+        with:
+          deliverables: app.yaml
+          promote: true
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Show deployment info
+        run: |
+          echo "✅ Deployed UI version ${{ steps.version.outputs.VERSION }}"
+          echo "🌐 URL: https://hintder.ai"

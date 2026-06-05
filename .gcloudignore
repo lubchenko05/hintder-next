@@ -1,0 +1,17 @@
+# What NOT to upload to App Engine.
+#
+# We exclude src/ on purpose: App Engine must serve the .next/ that CI already
+# built (npm install + next start), NOT rebuild from source. Excluding src/
+# guarantees the buildpack can't re-run the build. So KEEP .next/ uploaded.
+.git
+.github
+.env
+.env.*
+node_modules
+src/
+
+# Keep content/*.md (guides + stories) — src/lib/content.ts reads them from
+# disk at request time (getAllPosts → fs.readdirSync). Without them, the
+# /guides and /stories pages + their sitemap entries would be empty.
+# So only exclude top-level docs (README.md, etc.), not content/**.
+/*.md
