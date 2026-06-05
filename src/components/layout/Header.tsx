@@ -41,35 +41,69 @@ export function Header() {
         {authed ? (
           <AccountMenu navItems={NAV} primary={{ label: "Open app", href: "/app" }} />
         ) : (
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={menuOpen}
-            className="p-1.5 -mr-1 text-text-secondary hover:text-text transition-colors"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
+          <>
+            {/* Desktop: inline nav + sign in + CTA (no burger). */}
+            <div className="hidden md:flex items-center gap-7">
+              {NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="font-display italic text-[14px] text-text-secondary hover:text-text transition-colors"
+                  style={{ fontWeight: 300 }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <Link
+                href="/signin"
+                className="font-display italic text-[14px] text-text-secondary hover:text-text transition-colors"
+                style={{ fontWeight: 300 }}
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/app"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-display italic text-[14px] text-white"
+                style={{
+                  background: "linear-gradient(95deg, #FE3C72, #FF6B6B 50%, #FF8552)",
+                  fontWeight: 400,
+                }}
+              >
+                Try free <ArrowRight size={13} className="text-white" />
+              </Link>
+            </div>
+
+            {/* Mobile: a single hamburger. */}
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              className="md:hidden p-1.5 -mr-1 text-text-secondary hover:text-text transition-colors"
             >
-              {menuOpen ? (
-                <path d="M18 6L6 18M6 6l12 12" />
-              ) : (
-                <path d="M3 6h18M3 12h18M3 18h18" />
-              )}
-            </svg>
-          </button>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              >
+                {menuOpen ? (
+                  <path d="M18 6L6 18M6 6l12 12" />
+                ) : (
+                  <path d="M3 6h18M3 12h18M3 18h18" />
+                )}
+              </svg>
+            </button>
+          </>
         )}
       </nav>
 
       {/* Anonymous menu panel — nav + sign in + try free, all in one place. */}
       {!authed && menuOpen && (
         <div
-          className="mx-auto max-w-7xl mt-3 rounded-2xl overflow-hidden animate-fade-up"
+          className="md:hidden mx-auto max-w-7xl mt-3 rounded-2xl overflow-hidden animate-fade-up"
           style={{
             background:
               "linear-gradient(180deg, rgba(25,20,30,0.98), rgba(15,12,20,0.98))",
