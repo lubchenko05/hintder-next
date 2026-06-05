@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Mark } from "@/components/brand/Mark";
 import { billingApi } from "@/lib/api";
 import { getToken } from "@/lib/auth-token";
+import { useAuth } from "@/hooks/useAuth";
 import { refreshHints } from "@/hooks/useCredits";
 import { refreshSubscription } from "@/hooks/useSubscription";
 
@@ -28,6 +29,7 @@ export default function MockCheckoutPage() {
 function CheckoutContent() {
   const params = useSearchParams();
   const router = useRouter();
+  const { auth, ready } = useAuth();
 
   const txn = params.get("txn") || "";
   const hints = Number(params.get("hints") || 0);
@@ -42,6 +44,9 @@ function CheckoutContent() {
 
   useEffect(() => {
     if (handled.current) return;
+    /* Wait for auth to resolve so the anon-vs-permanent decision below is real
+       (isAnonymous defaults true before ready). */
+    if (!ready) return;
     handled.current = true;
 
     const selfUrl = `/checkout/mock?txn=${txn}&hints=${hints}&price=${price}&kind=${kind}`;
@@ -61,12 +66,20 @@ function CheckoutContent() {
         refreshSubscription();
         setStatus("redirecting");
         const q = isSub ? `?kind=sub` : `?hints=${hints}`;
-        router.replace(`/checkout/success${q}`);
+        const successUrl = `/checkout/success${q}`;
+        /* Auth required AFTER a successful purchase: an anonymous buyer signs in
+           to secure the plan to a permanent account. Firebase linking keeps the
+           same uid, so the just-granted subscription/hints are preserved. */
+        if (auth.isAnonymous) {
+          router.replace(`/signin?next=${encodeURIComponent(successUrl)}`);
+        } else {
+          router.replace(successUrl);
+        }
       } catch {
         setStatus("error");
       }
     })();
-  }, [txn, hints, price, kind, isSub, router]);
+  }, [ready, auth.isAnonymous, txn, hints, price, kind, isSub, router]);
 
   if (status === "redirecting") return <Splash text="all set — taking you in…" />;
 

@@ -96,6 +96,10 @@ export function PricingPlans() {
 
   const handleAction = async (planId: string, action: "subscribe" | "upgrade" | "downgrade" | "cancel") => {
     if (pending) return;
+    /* No auth gate before checkout — even an anonymous user can pay (lower
+       funnel friction). We require sign-in AFTER a successful purchase (in
+       /checkout/mock) to secure it to a permanent account. We only need *some*
+       session (token) so the purchase has a uid to attach to. */
     if (!getToken()) {
       router.push(`/signin?next=${encodeURIComponent("/pricing")}`);
       return;

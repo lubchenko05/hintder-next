@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Mark } from "@/components/brand/Mark";
@@ -14,7 +15,6 @@ import { StylePicker } from "@/components/app/StylePicker";
 import { MessageList } from "@/components/app/MessageList";
 import { FollowUp } from "@/components/app/FollowUp";
 import { DatePrep } from "@/components/app/DatePrep";
-import { Paywall } from "@/components/app/Paywall";
 import { MatchSidebar } from "@/components/app/MatchSidebar";
 import { PastMatchView } from "@/components/app/PastMatchView";
 import { MatchSettings } from "@/components/app/MatchSettings";
@@ -117,8 +117,8 @@ export default function AppPage() {
     activeMatchId,
     credits,
     paywallOpen,
-    closePaywall,
   } = useAppFlow();
+  const router = useRouter();
 
   const { matches, getMatch, removeMatch } = useMatches();
   const { auth } = useAuth();
@@ -241,6 +241,13 @@ export default function AppPage() {
       window.history.replaceState(null, "", target);
     }
   }, [selectedMatchId, activeMatchId]);
+
+  /* Out of hints → straight to the full plans page (the paywall). No
+     intermediate one-price teaser modal. The active match is already persisted
+     (RESUME_MATCH_KEY), so the user lands back on it after checkout. */
+  useEffect(() => {
+    if (paywallOpen) router.push("/pricing");
+  }, [paywallOpen, router]);
 
   return (
     <div className="h-dvh flex flex-col bg-bg relative overflow-hidden">
@@ -521,8 +528,6 @@ export default function AppPage() {
           )}
         </main>
       </div>
-
-      <Paywall open={paywallOpen} onClose={closePaywall} />
 
       {/* Silence unused-var warning for ArrowLeft (used by past view variants) */}
       {false && <ArrowLeft />}
