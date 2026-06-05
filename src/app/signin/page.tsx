@@ -248,14 +248,6 @@ function SignInContent() {
             </p>
           </div>
         )}
-
-        <p
-          className="mt-8 text-center font-display italic text-[12.5px] text-text-muted leading-relaxed"
-          style={{ fontWeight: 300 }}
-        >
-          Your hints and matches live on your account — sign in on any device to
-          pick them back up.
-        </p>
       </div>
     </main>
   );
