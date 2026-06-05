@@ -35,7 +35,7 @@ jobs:
           NEXT_PUBLIC_API_URL: https://api.hintder.ai
           # Firebase WEB config — public by design, baked into the client bundle.
           NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyCgbpL0LXHY72MS8BwpadZMxg90AcezuPA
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: hintder-ai.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: login.hintder.ai
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: hintder-ai
           NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: hintder-ai.firebasestorage.app
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '587342140966'
