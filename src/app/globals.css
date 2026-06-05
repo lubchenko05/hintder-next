@@ -1,26 +1,680 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@source "../components/**/*.{ts,tsx}";
+
+@theme {
+  /* ── Backgrounds (deep dark with warm undertone) ── */
+  --color-bg: #08070A;
+  --color-bg-card: #131017;
+  --color-bg-elevated: #1B1722;
+  --color-bg-input: #15121C;
+
+  /* ── Text ── */
+  --color-text: #FAFAFA;
+  --color-text-secondary: #B8B5BF;
+  --color-text-muted: #6E6B78;
+
+  /* ── Tinder-warm primary palette ── */
+  --color-flame: #FE3C72;       /* Tinder pink/red */
+  --color-flame-hot: #FF6B6B;
+  --color-ember: #FF8552;       /* Warm orange */
+  --color-rose: #E94666;
+  --color-accent: #FE3C72;
+  --color-accent-hover: #FF5C8A;
+  --color-accent-muted: rgba(254, 60, 114, 0.14);
+
+  /* ── Secondary (cool counterpoint) ── */
+  --color-violet: #8B5CF6;
+  --color-violet-muted: rgba(139, 92, 246, 0.14);
+  --color-electric: #5B8DEF;
+
+  /* ── Signals ── */
+  --color-success: #5BE3A9;
+  --color-success-muted: rgba(91, 227, 169, 0.14);
+  --color-warning: #FBBF24;
+  --color-warning-muted: rgba(251, 191, 36, 0.14);
+  --color-danger: #FF4757;
+
+  /* ── Surfaces ── */
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-hover: rgba(255, 255, 255, 0.16);
+  --color-glass: rgba(255, 255, 255, 0.03);
+  --color-glass-hover: rgba(255, 255, 255, 0.06);
+
+  /* ── Radii ── */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
+  --radius-full: 9999px;
+
+  --font-sans: var(--font-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ── Base ─────────────────────────────────── */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    /* Project-wide: no text selection anywhere by default. Opt back in
+       with .select-text on any element that actually needs it (e.g.
+       message text users want to copy from). */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Inputs/textareas still need selection so users can paste/edit. */
+  input,
+  textarea,
+  [contenteditable="true"],
+  .allow-select,
+  .select-text,
+  .select-text * {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: white;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Scrollbar — fully hidden site-wide ───── */
+
+@layer base {
+  /* Firefox + IE */
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  /* Webkit (Chrome, Safari, Edge, Opera) */
+  ::-webkit-scrollbar,
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-thumb,
+  ::-webkit-scrollbar-corner {
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+    display: none !important;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 }
+
+/* ── Utilities ────────────────────────────── */
+
+@utility glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+}
+
+@utility glass-hover {
+  background: var(--color-glass-hover);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border-hover);
+}
+
+@utility gradient-accent {
+  background: linear-gradient(135deg, var(--color-flame) 0%, var(--color-ember) 100%);
+}
+
+@utility gradient-flame {
+  background: linear-gradient(135deg, var(--color-flame) 0%, var(--color-ember) 50%, #FFB347 100%);
+}
+
+@utility gradient-tinder {
+  background: linear-gradient(180deg, var(--color-rose) 0%, var(--color-flame) 50%, var(--color-ember) 100%);
+}
+
+@utility gradient-cool {
+  background: linear-gradient(135deg, var(--color-violet) 0%, var(--color-electric) 100%);
+}
+
+@utility gradient-text {
+  background: linear-gradient(135deg, var(--color-flame) 0%, var(--color-ember) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility gradient-text-cool {
+  background: linear-gradient(135deg, var(--color-violet) 0%, var(--color-electric) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility glow-flame {
+  box-shadow:
+    0 0 0 1px rgba(254, 60, 114, 0.3),
+    0 10px 40px -10px rgba(254, 60, 114, 0.5),
+    0 0 60px -20px rgba(255, 133, 82, 0.3);
+}
+
+@utility glow-soft {
+  box-shadow:
+    0 4px 20px -4px rgba(0, 0, 0, 0.5),
+    0 0 60px -30px rgba(254, 60, 114, 0.4);
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Thin styled scrollbar — used on independent scroll panes. */
+@utility custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 8px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(254, 60, 114, 0.5);
+}
+
+/* ── Animations ───────────────────────────── */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-8px) rotate(1deg); }
+  66% { transform: translateY(4px) rotate(-1deg); }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+@utility animate-slide-in {
+  animation: slide-in-right 0.4s ease-out both;
+}
+
+@utility animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+@utility animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@utility animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes story-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.82) translateY(18px);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.03) translateY(-2px);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@utility animate-story-pop {
+  animation: story-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes story-glow {
+  0%, 100% {
+    box-shadow:
+      0 30px 80px -20px rgba(254, 60, 114, 0.55),
+      0 0 0 1px rgba(254, 60, 114, 0.25),
+      inset 0 0 60px rgba(254, 60, 114, 0.05);
+  }
+  50% {
+    box-shadow:
+      0 35px 90px -18px rgba(255, 133, 82, 0.55),
+      0 0 0 1px rgba(255, 133, 82, 0.3),
+      inset 0 0 80px rgba(254, 60, 114, 0.1);
+  }
+}
+
+@utility animate-story-glow {
+  animation: story-glow 4s ease-in-out infinite;
+}
+
+/* ── Stagger children ─────────────────────── */
+
+@layer components {
+  .stagger-children > * {
+    animation: fade-up 0.4s ease-out both;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+  .stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+}
+
+/* ── Phone Frame (UploadZone) ────────────────── */
+
+@property --ring-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@layer components {
+.phone-glow {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    var(--color-accent) 25%,
+    var(--color-violet) 50%,
+    var(--color-accent) 75%,
+    transparent 100%
+  );
+  opacity: var(--glow-opacity, 0.4);
+  filter: blur(var(--glow-spread, 12px));
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+.phone-frame:hover .phone-glow {
+  opacity: 0.7;
+  filter: blur(18px);
+}
+
+.phone-analyzing-ring {
+  background: conic-gradient(
+    from var(--ring-angle, 0deg),
+    transparent 0%,
+    var(--color-accent) 30%,
+    var(--color-violet) 50%,
+    var(--color-accent) 70%,
+    transparent 100%
+  );
+  opacity: 0.85;
+  filter: blur(10px);
+  animation: ring-spin 1.5s linear infinite;
+}
+
+@keyframes ring-spin {
+  to { --ring-angle: 360deg; }
+}
+
+/* Fallback: rotate the entire element for browsers without @property */
+@supports not (background: conic-gradient(from var(--ring-angle, 0deg), red, blue)) {
+  .phone-analyzing-ring {
+    animation: ring-spin-fallback 1.5s linear infinite;
+  }
+}
+
+@keyframes ring-spin-fallback {
+  to { transform: rotate(360deg); }
+}
+
+.phone-inner-glow {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    var(--color-accent) 0%,
+    transparent 60%
+  );
+}
+
+@keyframes plus-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+.phone-plus-pulse {
+  animation: plus-breathe 2.8s ease-in-out infinite;
+}
+
+.photo-card {
+  transform:
+    rotate(var(--photo-rotate, 0deg))
+    translate(var(--photo-x, 0px), var(--photo-y, 0px));
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.photo-card:hover {
+  transform: rotate(0deg) translate(0px, 0px) scale(1.05);
+  z-index: 50 !important;
+}
+} /* end @layer components */
+
+/* ═══════════════════════════════════════════════════
+   SWIPE DECK + 3D TILT (Tinder-style)
+   ═══════════════════════════════════════════════════ */
+
+@layer components {
+  /* Card stack — z-index layered cards behind the active one */
+  .swipe-card {
+    transform-origin: center bottom;
+    transition: transform 0.4s cubic-bezier(0.21, 0.6, 0.35, 1),
+                box-shadow 0.4s ease,
+                opacity 0.4s ease;
+    will-change: transform, opacity;
+    touch-action: none;
+  }
+
+  .swipe-card[data-pos="0"] {
+    z-index: 30;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  .swipe-card[data-pos="1"] {
+    z-index: 20;
+    transform: translateY(-12px) scale(0.94) rotate(-1.5deg);
+    opacity: 0.85;
+  }
+  .swipe-card[data-pos="2"] {
+    z-index: 10;
+    transform: translateY(-22px) scale(0.88) rotate(1.5deg);
+    opacity: 0.55;
+  }
+  .swipe-card[data-pos="3"] {
+    z-index: 5;
+    transform: translateY(-30px) scale(0.82) rotate(-1deg);
+    opacity: 0.25;
+  }
+
+  /* Swipe overlay labels (LIKE / NOPE) — Tinder signature */
+  .swipe-stamp-like {
+    position: absolute;
+    top: 28px;
+    left: 28px;
+    padding: 6px 18px;
+    border: 3px solid var(--color-success);
+    border-radius: 8px;
+    color: var(--color-success);
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: 2px;
+    transform: rotate(-18deg);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .swipe-stamp-nope {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    padding: 6px 18px;
+    border: 3px solid var(--color-danger);
+    border-radius: 8px;
+    color: var(--color-danger);
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: 2px;
+    transform: rotate(18deg);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+
+  /* 3D perspective tilt — for cards reacting to cursor */
+  .tilt-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.25s ease-out;
+    will-change: transform;
+  }
+
+  /* Magnetic button hover state */
+  .magnetic {
+    transition: transform 0.3s cubic-bezier(0.21, 0.6, 0.35, 1);
+    will-change: transform;
+  }
+
+  /* Card surface — gradient black with subtle warmth */
+  .card-surface {
+    background:
+      radial-gradient(ellipse at top right, rgba(254, 60, 114, 0.08), transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(255, 133, 82, 0.06), transparent 50%),
+      linear-gradient(180deg, #1A1620 0%, #0F0C14 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Match burst — confetti hearts */
+  .match-burst {
+    position: absolute;
+    pointer-events: none;
+    color: var(--color-flame);
+    animation: match-pop 1.2s ease-out forwards;
+  }
+
+  /* Typewriter — for live demo */
+  .typewriter-caret::after {
+    content: "▌";
+    color: var(--color-flame);
+    animation: caret-blink 0.7s steps(1) infinite;
+    margin-left: 2px;
+  }
+
+  /* Aurora background blob */
+  .aurora {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    pointer-events: none;
+    animation: aurora-drift 14s ease-in-out infinite alternate;
+  }
+
+  /* Spotlight cursor follow */
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(254, 60, 114, 0.12),
+      transparent 60%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .spotlight:hover::before { opacity: 1; }
+}
+
+@keyframes match-pop {
+  0% {
+    transform: scale(0) translateY(0);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.2) translateY(-10px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.6) translateY(-120px) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}
+
+@keyframes aurora-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(80px, -60px) scale(1.15); }
+  100% { transform: translate(-40px, 40px) scale(0.9); }
+}
+
+@keyframes heart-beat {
+  0%, 100% { transform: scale(1); }
+  20%      { transform: scale(1.15); }
+  40%      { transform: scale(1); }
+  60%      { transform: scale(1.1); }
+}
+
+@utility animate-heart-beat {
+  animation: heart-beat 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer-text {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@utility text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-text-secondary) 0%,
+    var(--color-flame) 50%,
+    var(--color-text-secondary) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-text 3s linear infinite;
+}
+
+@keyframes pulse-bar {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1.2); }
+}
+
+@utility animate-pulse-bar {
+  transform-origin: bottom;
+  animation: pulse-bar 1.1s ease-in-out infinite;
+}
+
+@keyframes ticker-slide {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-100%); }
+}
+
+@utility animate-ticker {
+  animation: ticker-slide 18s linear infinite;
+}
+
+@keyframes ticker-horizontal {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@utility animate-ticker-horizontal {
+  animation: ticker-horizontal 50s linear infinite;
+}
+
+/* Holographic card — gradient shifts with cursor */
+@layer components {
+  .holo-card {
+    background:
+      radial-gradient(
+        circle at var(--cursor-x, 50%) var(--cursor-y, 50%),
+        rgba(255, 255, 255, 0.15) 0%,
+        transparent 40%
+      ),
+      var(--holo-bg, linear-gradient(135deg, var(--color-flame), var(--color-ember)));
+    transition: background 0.1s;
+  }
+}
+

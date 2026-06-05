@@ -30,8 +30,24 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — ignored, but keep committed *.example templates
+.env
+.env.*
+*.env
+!*.env.example
+!.env.example
+
+# secrets — defense in depth (no service-account / credential JSON, keys or
+# certs should ever live in the frontend repo; block them by type just in case)
+*-sa.json
+*service-account*.json
+*-firebase.json
+*credentials*.json
+*-adminsdk-*.json
+*.key
+*.p12
+*.pfx
+secrets/
 
 # vercel
 .vercel
