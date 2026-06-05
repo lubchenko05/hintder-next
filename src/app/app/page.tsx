@@ -188,6 +188,60 @@ export default function AppPage() {
     window.history.replaceState(null, "", "/app");
   }, [matches, getMatch, handleResumeMatch]);
 
+  /* Deep-link / reload support: the open match's id lives in the URL as
+     /app?id=<id>, so a full page reload restores that match — and its photo,
+     via handleResumeMatch's signed-URL resolver — instead of dropping the user
+     on a blank upload. The id is read ONCE at mount (before the sync effect
+     below can rewrite the URL), then resumed as soon as the match list loads. */
+  const urlMatchId = useRef<string | null>(
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("id")
+      : null,
+  );
+  const bootstrappedRef = useRef(false);
+  useEffect(() => {
+    if (bootstrappedRef.current || typeof window === "undefined") return;
+    /* Payment round-trip is owned by the resumed effect above — just unblock
+       the URL-sync effect below so it can stamp ?id= once that resume lands. */
+    if (new URLSearchParams(window.location.search).get("resumed") === "1") {
+      bootstrappedRef.current = true;
+      return;
+    }
+    const id = urlMatchId.current;
+    if (!id) {
+      bootstrappedRef.current = true;
+      return;
+    }
+    const m = getMatch(id);
+    if (m) {
+      bootstrappedRef.current = true;
+      if (m.status === "asked_out") {
+        setSelectedMatchId(id);
+      } else {
+        setSelectedMatchId(null);
+        handleResumeMatch(m);
+      }
+      setMobileView("detail");
+    } else if (matches.length > 0) {
+      /* List loaded but this id is gone (deleted/foreign) — give up cleanly. */
+      bootstrappedRef.current = true;
+    }
+    /* else: matches still loading — effect re-runs when they arrive. */
+  }, [matches, getMatch, handleResumeMatch]);
+
+  /* Keep the URL in sync with whichever match is open, so a reload restores it.
+     Runs only AFTER bootstrap so it can't wipe the incoming ?id= before it's
+     consumed; skips while a payment ?resumed=1 is still being processed. */
+  useEffect(() => {
+    if (!bootstrappedRef.current || typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("resumed") === "1") return;
+    const openId = selectedMatchId ?? activeMatchId;
+    const target = openId ? `/app?id=${openId}` : "/app";
+    if (window.location.pathname + window.location.search !== target) {
+      window.history.replaceState(null, "", target);
+    }
+  }, [selectedMatchId, activeMatchId]);
+
   return (
     <div className="h-dvh flex flex-col bg-bg relative overflow-hidden">
       {/* Aurora background */}
