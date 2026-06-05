@@ -8,7 +8,6 @@ import {
   linkWithCredential,
   linkWithPopup,
   onAuthStateChanged,
-  sendSignInLinkToEmail,
   signInAnonymously,
   signInWithCredential,
   signInWithEmailLink,
@@ -174,7 +173,9 @@ export function useAuth() {
   const sendEmailLink = useCallback(async (email: string, next: string) => {
     const origin = window.location.origin;
     const url = `${origin}/signin?next=${encodeURIComponent(next)}`;
-    await sendSignInLinkToEmail(fbAuth, email, { url, handleCodeInApp: true });
+    /* Our backend mints the Firebase magic link and emails it via Brevo (branded,
+       from noreply@hintder.ai) instead of Firebase's default sender. */
+    await authApi.sendEmailLink(email, url);
     window.localStorage.setItem(EMAIL_FOR_SIGNIN, email);
   }, []);
 

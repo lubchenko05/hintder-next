@@ -149,6 +149,13 @@ export const authApi = {
       body: { token: idToken, device_id: getDeviceId() },
       auth: false,
     }),
+  /** Send a branded passwordless sign-in link (backend mints it + emails via Brevo). */
+  sendEmailLink: (email: string, continueUrl: string) =>
+    apiFetch<void>("/auth/email-link", {
+      method: "POST",
+      body: { email, continue_url: continueUrl },
+      auth: false,
+    }),
 };
 
 export const meApi = {
