@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start -p $PORT",
+    "lint": "eslint",
+    "gcp-build": ""
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
