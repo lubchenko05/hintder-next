@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
@@ -16,8 +16,8 @@ import {
 } from "firebase/auth";
 import type { AuthError } from "firebase/auth";
 import { auth as fbAuth } from "@/lib/firebase";
-import { authApi } from "@/lib/api";
-import { clearToken, setToken } from "@/lib/auth-token";
+import { authApi, meApi } from "@/lib/api";
+import { clearToken, getToken, setToken } from "@/lib/auth-token";
 import type { AuthState } from "@/types";
 
 /* ─────────────────────────────────────────────
@@ -49,6 +49,9 @@ export function useAuth() {
   const [ready, setReady] = useState(false);
   /* "backend" = Firebase is fine but our backend didn't authorize. */
   const [error, setError] = useState<"backend" | null>(null);
+  /* Tracks the previous user's anonymity so we can detect an anon→permanent
+     transition and claim the anon's assets (post-payment sign-in). */
+  const wasAnonymousRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(fbAuth, async (fbUser) => {
@@ -94,10 +97,20 @@ export function useAuth() {
       }
 
       /* Exchange this user (anon OR permanent) for a backend JWT. */
+      const wasAnon = wasAnonymousRef.current;
+      const prevToken = getToken(); // current (maybe anon) JWT, before we overwrite it
+      wasAnonymousRef.current = fbUser.isAnonymous;
       try {
         const idToken = await fbUser.getIdToken();
         const { access_token } = await authApi.firebaseLogin(idToken);
         setToken(access_token);
+        /* Anon → permanent transition: bring the anonymous account's subscription
+           + hints to the now-permanent account. Server no-ops if the uid was
+           preserved (linking); transfers if the user signed into an existing
+           account (uid changed). Authed as the NEW user; proof = the anon JWT. */
+        if (wasAnon === true && !fbUser.isAnonymous && prevToken) {
+          void meApi.claim(prevToken).catch(() => undefined);
+        }
         setAuth({
           uid: fbUser.uid,
           isAnonymous: fbUser.isAnonymous,

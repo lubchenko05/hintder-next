@@ -160,6 +160,10 @@ export const authApi = {
 
 export const meApi = {
   get: () => apiFetch<ApiUser>("/me"),
+  /** Move a just-abandoned anonymous account's subscription + hints to this user
+      (post-payment 'pay anon, sign in after' flow). prevToken = the anon's JWT. */
+  claim: (prevToken: string) =>
+    apiFetch<void>("/me/claim", { method: "POST", body: { prev_token: prevToken } }),
 };
 
 export const hintsApi = {
