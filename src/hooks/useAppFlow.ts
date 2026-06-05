@@ -22,7 +22,6 @@ import {
   generateMessages,
   analyzeReply,
   regenerateMessage,
-  signImageUrls,
 } from "@/lib/ai";
 import { useCredits } from "./useCredits";
 import { useMatches } from "./useMatches";
@@ -96,24 +95,6 @@ export function useAppFlow() {
     activeIdRef.current = id;
     setActiveMatchId(id);
   }, []);
-
-  /* For a match with no cached photos (e.g. after a full reload), exchange the
-     stored gs:// URIs for short-lived signed view URLs and show them — but only
-     if the user is still on that match when they arrive. Cached so a later
-     revisit is instant. Best-effort: failure just leaves the placeholder. */
-  const resolveSignedImages = useCallback(
-    async (matchId: string, uris: string[]) => {
-      try {
-        const signed = await signImageUrls(uris);
-        if (!signed.length) return;
-        cacheMerge(matchId, { images: signed });
-        if (activeIdRef.current === matchId) setUploadedImages(signed);
-      } catch {
-        /* best-effort — keep the placeholder */
-      }
-    },
-    [cacheMerge],
-  );
 
   /* Persist the active match (analysis + conversation + paid openers + picked
      voice/risk) to the backend. Called on every meaningful state change so a
@@ -539,13 +520,12 @@ export function useAppFlow() {
       if (match.pickedStyle) setCurrentStyle(match.pickedStyle);
       if (match.pickedTone) setCurrentTone(match.pickedTone);
 
-      /* Photos: cached data-URLs if we still have them this session; otherwise
-         exchange the stored gs:// URIs for signed view URLs (async). */
-      const cachedImages = cached?.images ?? [];
-      setUploadedImages(cachedImages);
-      if (!cachedImages.length && match.analysis.imageUrls?.length) {
-        void resolveSignedImages(match.id, match.analysis.imageUrls);
-      }
+      /* Photos: cached data-URLs from this session if we have them, otherwise the
+         backend-signed view URLs that arrived with the match — ready right away,
+         no extra round-trip, no placeholder flash. */
+      const resumedImages = cached?.images?.length ? cached.images : match.imageUrls ?? [];
+      setUploadedImages(resumedImages);
+      if (resumedImages.length) cacheMerge(match.id, { images: resumedImages });
 
       /* Land on the furthest point reached: an active dialogue → the follow-up
          loop; already-generated (paid) openers → the messages list; otherwise
@@ -558,7 +538,7 @@ export function useAppFlow() {
         setStep("analysis");
       }
     },
-    [setActiveMatch, resolveSignedImages],
+    [setActiveMatch, cacheMerge],
   );
 
   return {

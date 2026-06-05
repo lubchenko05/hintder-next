@@ -156,6 +156,9 @@ export interface MatchHistoryEntry {
   /** The picked style + tone (if known) for context in the viewer. */
   pickedStyle?: MessageStyle;
   pickedTone?: MessageTone;
+  /** Ready-to-display signed view URLs for the screenshots, computed by the
+      backend on read. Display-only — never sent back on upsert. */
+  imageUrls?: string[];
 }
 
 export interface AuthState {

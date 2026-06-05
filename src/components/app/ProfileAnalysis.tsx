@@ -56,6 +56,12 @@ export function ProfileAnalysis({
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
+              /* background-clip:text + the tight 0.95 line-height clips the
+                 italic descenders; give the glyph box room without shifting
+                 layout. */
+              display: "inline-block",
+              paddingBottom: "0.12em",
+              marginBottom: "-0.12em",
             }}
           >
             {analysis.age}

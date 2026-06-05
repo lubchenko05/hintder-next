@@ -206,7 +206,10 @@ export const matchesApi = {
   list: () => apiFetch<MatchHistoryEntry[]>("/matches"),
   /** Create or replace a match. Conversation screenshots are stripped (transient). */
   upsert: (entry: MatchHistoryEntry) => {
-    const { id, conversation, ...rest } = entry;
+    /* imageUrls are backend-computed signed view URLs (display-only); strip so
+       they never round-trip into the PUT body (the validator forbids extras). */
+    const { id, conversation, imageUrls: _imageUrls, ...rest } = entry;
+    void _imageUrls;
     const body = {
       ...rest,
       conversation: conversation.map((t) => ({
