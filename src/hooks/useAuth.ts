@@ -163,7 +163,10 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     await fbSignOut(fbAuth);
     clearToken();
-    // onAuthStateChanged(null) bootstraps a fresh anonymous account.
+    /* Hard-navigate home so the workspace unmounts and the URL + in-memory state
+       reset — otherwise /app keeps showing the previous user's match. A fresh
+       anonymous account is bootstrapped by onAuthStateChanged on the new page. */
+    if (typeof window !== "undefined") window.location.assign("/");
   }, []);
 
   /* Passwordless email sign-in. Sends a one-time link; on return the effect

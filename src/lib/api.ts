@@ -1,6 +1,6 @@
 "use client";
 
-import { clearToken, getToken } from "@/lib/auth-token";
+import { clearToken, getDeviceId, getToken } from "@/lib/auth-token";
 import type {
   FollowUpAnalysis,
   GeneratedMessage,
@@ -146,7 +146,7 @@ export const authApi = {
   firebaseLogin: (idToken: string) =>
     apiFetch<{ access_token: string; token_type: string }>("/auth/firebase", {
       method: "POST",
-      body: { token: idToken },
+      body: { token: idToken, device_id: getDeviceId() },
       auth: false,
     }),
 };
