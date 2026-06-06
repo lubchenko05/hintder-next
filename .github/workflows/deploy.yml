@@ -43,8 +43,8 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: G-EV5E2RC9T9
           # Paddle.js (public client token + environment). SANDBOX for testing;
           # swap to the live token + 'production' at go-live.
-          NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: test_9f58c79b520be573236d74d1765
-          NEXT_PUBLIC_PADDLE_ENV: sandbox
+          NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: live_2beaf1bd0f5f07530859dad0a5e
+          NEXT_PUBLIC_PADDLE_ENV: production
 
       - name: Google Auth
         uses: google-github-actions/auth@v2
