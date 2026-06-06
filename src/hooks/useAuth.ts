@@ -19,7 +19,7 @@ import type { AuthError } from "firebase/auth";
 import { auth as fbAuth } from "@/lib/firebase";
 import { authApi, meApi } from "@/lib/api";
 import { clearToken, getToken, setToken } from "@/lib/auth-token";
-import { analytics, identifyUser, resetUser } from "@/lib/analytics";
+import { analytics, identifyUser, initAnalytics, resetUser } from "@/lib/analytics";
 import type { AuthState } from "@/types";
 
 /* ─────────────────────────────────────────────
@@ -117,6 +117,11 @@ export function useAuth() {
       const wasAnon = wasAnonymousRef.current;
       const prevToken = getToken(); // current (maybe anon) JWT, before we overwrite it
       wasAnonymousRef.current = fbUser.isAnonymous;
+      /* Initialise Amplitude WITH this uid the first time auth resolves (anon or
+         permanent). The uid is stable across the anon→permanent link, so events
+         carry one identity from the start — no device-only user that later splits
+         from the identified one. Idempotent after the first call. */
+      initAnalytics(fbUser.uid);
       try {
         const idToken = await fbUser.getIdToken();
         const { access_token } = await authApi.firebaseLogin(idToken);

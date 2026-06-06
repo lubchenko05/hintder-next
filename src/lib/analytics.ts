@@ -16,9 +16,14 @@ const AMPLITUDE_API_KEY = "95e9508e3914abfa276b3731d6780117";
 
 let initialized = false;
 
-export const initAnalytics = (): void => {
+/* Initialise once, WITH the user id known (the Firebase uid, stable across the
+   anon→permanent link). Passing the id to init() means the very first events
+   already carry it — no device-only "anonymous" user gets created and then split
+   from the identified one. Call this after auth resolves, not blindly at app
+   start. Idempotent: only the first call (with the first uid) takes effect. */
+export const initAnalytics = (userId?: string): void => {
   if (initialized || typeof window === "undefined") return;
-  amplitude.init(AMPLITUDE_API_KEY, {
+  amplitude.init(AMPLITUDE_API_KEY, userId, {
     defaultTracking: {
       sessions: true,
       pageViews: true,
