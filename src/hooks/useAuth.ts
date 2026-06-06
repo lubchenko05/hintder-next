@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EmailAuthProvider,
+  fetchSignInMethodsForEmail,
   GoogleAuthProvider,
   isSignInWithEmailLink,
   linkWithCredential,
@@ -44,11 +45,26 @@ function loadingState(): AuthState {
   return { uid: "loading", isAnonymous: true };
 }
 
+/* Message for when an email already has an account via a different sign-in
+   method — tells the user which one to use instead of failing silently. */
+function accountExistsNotice(methods: string[]): string {
+  if (methods.includes("google.com")) {
+    return "This email already has an account. Use “Continue with Google” to sign in.";
+  }
+  if (methods.includes("emailLink") || methods.includes("password") || methods.includes("emaillink")) {
+    return "This email already has an account. Use “Continue with email” to sign in.";
+  }
+  return "This email already has an account — please sign in with the method you used originally.";
+}
+
 export function useAuth() {
   const [auth, setAuth] = useState<AuthState>(loadingState);
   const [ready, setReady] = useState(false);
   /* "backend" = Firebase is fine but our backend didn't authorize. */
   const [error, setError] = useState<"backend" | null>(null);
+  /* User-facing sign-in notice, e.g. "this email is registered via another method". */
+  const [notice, setNotice] = useState<string | null>(null);
+  const clearNotice = useCallback(() => setNotice(null), []);
   /* Tracks the previous user's anonymity so we can detect an anon→permanent
      transition and claim the anon's assets (post-payment sign-in). */
   const wasAnonymousRef = useRef<boolean | null>(null);
@@ -146,6 +162,7 @@ export function useAuth() {
      popup call itself) so the browser treats it as user-initiated. Don't add an
      ``await`` before ``linkWithPopup`` / ``signInWithPopup``. */
   const signInWithGoogle = useCallback(async () => {
+    setNotice(null);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     const cur = fbAuth.currentUser;
@@ -158,8 +175,25 @@ export function useAuth() {
     } catch (err) {
       const code = (err as { code?: string })?.code;
       if (code === "auth/credential-already-in-use") {
+        /* Same email already has a Google account — sign into it. */
         const cred = GoogleAuthProvider.credentialFromError(err as AuthError);
         if (cred) await signInWithCredential(fbAuth, cred);
+      } else if (
+        code === "auth/email-already-in-use" ||
+        code === "auth/account-exists-with-different-credential"
+      ) {
+        /* The email already has an account via a DIFFERENT method — we can't
+           silently merge; tell the user which method to use. */
+        const email = (err as { customData?: { email?: string } })?.customData?.email;
+        let methods: string[] = [];
+        if (email) {
+          try {
+            methods = await fetchSignInMethodsForEmail(fbAuth, email);
+          } catch {
+            /* ignore — fall back to the generic message */
+          }
+        }
+        setNotice(accountExistsNotice(methods));
       } else if (
         code === "auth/popup-closed-by-user" ||
         code === "auth/cancelled-popup-request" ||
@@ -167,7 +201,7 @@ export function useAuth() {
       ) {
         /* User dismissed the popup — not an error. */
       } else {
-        throw err;
+        setNotice("Couldn't sign in with Google. Please try again.");
       }
     }
   }, []);
@@ -192,5 +226,5 @@ export function useAuth() {
     window.localStorage.setItem(EMAIL_FOR_SIGNIN, email);
   }, []);
 
-  return { auth, ready, error, signInWithGoogle, sendEmailLink, signOut };
+  return { auth, ready, error, notice, clearNotice, signInWithGoogle, sendEmailLink, signOut };
 }

@@ -36,7 +36,7 @@ export default function SignInPage() {
 }
 
 function SignInContent() {
-  const { auth, ready, error, signInWithGoogle, sendEmailLink } = useAuth();
+  const { auth, ready, error, notice, signInWithGoogle, sendEmailLink } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
@@ -121,6 +121,24 @@ function SignInContent() {
             >
               Signed in, but we couldn&apos;t reach the hintder server. Check that
               it&apos;s running, then try again.
+            </p>
+          </div>
+        )}
+
+        {/* Account exists via a different sign-in method. */}
+        {notice && (
+          <div
+            className="mb-5 p-4 rounded-2xl text-center"
+            style={{
+              background: "linear-gradient(160deg, rgba(254,60,114,0.10), rgba(255,133,82,0.04))",
+              border: "1px solid rgba(254,60,114,0.3)",
+            }}
+          >
+            <p
+              className="font-display italic text-[13.5px] text-text-secondary leading-[1.5]"
+              style={{ fontWeight: 300 }}
+            >
+              {notice}
             </p>
           </div>
         )}
