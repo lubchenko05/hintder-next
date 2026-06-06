@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "@/components/brand/Icons";
 import { billingApi, type Plan } from "@/lib/api";
 import { getToken } from "@/lib/auth-token";
+import { useAuth } from "@/hooks/useAuth";
+import { openSubscriptionCheckout, paddleConfigured } from "@/lib/paddle";
 import { refreshHints } from "@/hooks/useCredits";
 import { refreshSubscription, useSubscription } from "@/hooks/useSubscription";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -83,6 +85,7 @@ const TIER_META: Record<string, TierMeta> = {
 
 export function PricingPlans() {
   const router = useRouter();
+  const { auth } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [interval, setIntervalState] = useState<Interval>("month");
   const { subscription } = useSubscription();
@@ -107,6 +110,20 @@ export function PricingPlans() {
     setPending(action === "cancel" ? "cancel" : planId);
     try {
       if (action === "subscribe") {
+        const plan = plans.find((p) => p.id === planId);
+        /* Real Paddle: open the overlay with the plan's price id; the webhook
+           activates the subscription (customData ties it to this uid). Falls
+           back to the mock checkout when Paddle isn't configured. */
+        if (paddleConfigured() && plan?.paddle_price_id) {
+          await openSubscriptionCheckout({
+            priceId: plan.paddle_price_id,
+            uid: auth.uid,
+            planId,
+            email: auth.email,
+          });
+          setPending(null);
+          return;
+        }
         const session = await billingApi.subscribe(planId);
         router.push(session.checkout_url);
         return;

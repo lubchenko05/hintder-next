@@ -94,6 +94,8 @@ export interface Plan {
   price_usd: number;
   hints_per_cycle: number;
   is_unlimited: boolean;
+  /** Paddle price id to open checkout with (null until Paddle is configured). */
+  paddle_price_id?: string | null;
 }
 
 export interface Subscription {

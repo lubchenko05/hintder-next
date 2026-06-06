@@ -1,10 +1,13 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mark } from "@/components/brand/Mark";
 import { ArrowRight } from "@/components/brand/Icons";
+import { useAuth } from "@/hooks/useAuth";
+import { refreshHints } from "@/hooks/useCredits";
+import { refreshSubscription } from "@/hooks/useSubscription";
 
 export default function CheckoutSuccessPage() {
   return (
@@ -34,6 +37,21 @@ export default function CheckoutSuccessPage() {
 function SuccessContent() {
   const params = useSearchParams();
   const hints = Number(params.get("hints") || 0);
+  const router = useRouter();
+  const { auth, ready } = useAuth();
+
+  /* The purchase is granted server-side (webhook). Refresh local state, and if
+     the buyer is still anonymous (paid via the overlay without signing in),
+     send them to sign in so the subscription is secured to a permanent account
+     — the backend claim then moves it across if their uid changes. */
+  useEffect(() => {
+    if (!ready) return;
+    refreshHints();
+    refreshSubscription();
+    if (auth.isAnonymous) {
+      router.replace(`/signin?next=${encodeURIComponent("/app?resumed=1")}`);
+    }
+  }, [ready, auth.isAnonymous, router]);
 
   return (
     <main className="min-h-dvh flex items-center justify-center px-5 py-10 bg-bg">
