@@ -1,8 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { SITE_URL } from "@/lib/site";
+
+/* Google Analytics 4 measurement id (public by design). GA4 "enhanced
+   measurement" auto-tracks SPA route changes via history events, so the base
+   gtag snippet is enough — no manual page_view wiring needed. */
+const GA_MEASUREMENT_ID = "G-EV5E2RC9T9";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -77,6 +83,18 @@ export default function RootLayout({
     >
       <body className="min-h-dvh flex flex-col font-sans antialiased">
         <Providers>{children}</Providers>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
       </body>
     </html>
   );

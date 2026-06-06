@@ -1,8 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
 import { Toaster } from "sonner";
+import { initAnalytics } from "@/lib/analytics";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
   return (
     <>
       <Toaster

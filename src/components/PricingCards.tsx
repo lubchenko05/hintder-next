@@ -10,6 +10,7 @@ import { openSubscriptionCheckout, paddleConfigured } from "@/lib/paddle";
 import { refreshHints } from "@/hooks/useCredits";
 import { refreshSubscription, useSubscription } from "@/hooks/useSubscription";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { analytics } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const TIER_RANK: Record<string, number> = { lite: 0, plus: 1, pro: 2, ultimate: 3 };
@@ -110,11 +111,13 @@ export function PricingPlans() {
     setPending(action === "cancel" ? "cancel" : planId);
     try {
       if (action === "subscribe") {
+        analytics.subscribeClicked(planId);
         const plan = plans.find((p) => p.id === planId);
         /* Real Paddle: open the overlay with the plan's price id; the webhook
            activates the subscription (customData ties it to this uid). Falls
            back to the mock checkout when Paddle isn't configured. */
         if (paddleConfigured() && plan?.paddle_price_id) {
+          analytics.checkoutOpened(planId);
           await openSubscriptionCheckout({
             priceId: plan.paddle_price_id,
             uid: auth.uid,
@@ -149,6 +152,7 @@ export function PricingPlans() {
       .plans()
       .then(setPlans)
       .catch(() => setPlans([]));
+    analytics.pricingViewed();
   }, []);
 
   /* Open on the interval the user already pays for (e.g. yearly subscribers

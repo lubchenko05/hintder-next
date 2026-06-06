@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mark } from "@/components/brand/Mark";
@@ -8,6 +8,7 @@ import { ArrowRight } from "@/components/brand/Icons";
 import { useAuth } from "@/hooks/useAuth";
 import { refreshHints } from "@/hooks/useCredits";
 import { refreshSubscription } from "@/hooks/useSubscription";
+import { analytics } from "@/lib/analytics";
 
 export default function CheckoutSuccessPage() {
   return (
@@ -39,6 +40,7 @@ function SuccessContent() {
   const hints = Number(params.get("hints") || 0);
   const router = useRouter();
   const { auth, ready } = useAuth();
+  const trackedRef = useRef(false);
 
   /* The purchase is granted server-side (webhook). Refresh local state, and if
      the buyer is still anonymous (paid via the overlay without signing in),
@@ -46,6 +48,12 @@ function SuccessContent() {
      — the backend claim then moves it across if their uid changes. */
   useEffect(() => {
     if (!ready) return;
+    /* Fire the purchase conversion once — this is the event ad campaigns
+       optimise against (mirrored in GA4 + Amplitude). */
+    if (!trackedRef.current) {
+      trackedRef.current = true;
+      analytics.purchaseCompleted({ hints: hints > 0 ? hints : undefined });
+    }
     refreshHints();
     refreshSubscription();
     if (auth.isAnonymous) {

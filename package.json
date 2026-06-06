@@ -10,6 +10,7 @@
     "gcp-build": ""
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.43.0",
     "@paddle/paddle-js": "^1.6.4",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

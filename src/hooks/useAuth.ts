@@ -19,6 +19,7 @@ import type { AuthError } from "firebase/auth";
 import { auth as fbAuth } from "@/lib/firebase";
 import { authApi, meApi } from "@/lib/api";
 import { clearToken, getToken, setToken } from "@/lib/auth-token";
+import { analytics, identifyUser, resetUser } from "@/lib/analytics";
 import type { AuthState } from "@/types";
 
 /* ─────────────────────────────────────────────
@@ -127,6 +128,18 @@ export function useAuth() {
         if (wasAnon === true && !fbUser.isAnonymous && prevToken) {
           void meApi.claim(prevToken).catch(() => undefined);
         }
+        /* Analytics: identify permanent users; treat the anon→permanent
+           transition as a sign-up (the conversion we optimise against). */
+        if (!fbUser.isAnonymous) {
+          identifyUser(fbUser.uid, { email: fbUser.email ?? undefined });
+          if (wasAnon === true) {
+            const method =
+              fbUser.providerData[0]?.providerId === "google.com"
+                ? "google"
+                : "email";
+            analytics.signUp(method);
+          }
+        }
         setAuth({
           uid: fbUser.uid,
           isAnonymous: fbUser.isAnonymous,
@@ -207,6 +220,8 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
+    analytics.logout();
+    resetUser();
     await fbSignOut(fbAuth);
     clearToken();
     /* Hard-navigate home so the workspace unmounts and the URL + in-memory state
