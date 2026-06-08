@@ -4,6 +4,7 @@ import { LegalDoc } from "@/components/LegalDoc";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/refund" },
   title: "Refund Policy",
   description: "Hintder's refund terms — 14-day money-back guarantee.",
 };

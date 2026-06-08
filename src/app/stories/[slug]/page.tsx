@@ -34,6 +34,7 @@ export async function generateMetadata({
   return {
     title: `${post.title} — hintder`,
     description: post.excerpt,
+    alternates: { canonical: `/stories/${slug}` },
   };
 }
 

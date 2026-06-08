@@ -4,6 +4,7 @@ import { LegalDoc } from "@/components/LegalDoc";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/terms" },
   title: "Terms of Service",
   description: "The terms that govern your use of Hintder.",
 };

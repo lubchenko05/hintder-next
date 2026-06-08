@@ -6,6 +6,7 @@ import { getAllPosts } from "@/lib/content";
 import { ArrowRight } from "@/components/brand/Icons";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/guides" },
   title: "Guides — hintder",
   description:
     "Field guides for what actually works on dating apps in 2026. Openers, replies, asking her out, recovery scripts.",

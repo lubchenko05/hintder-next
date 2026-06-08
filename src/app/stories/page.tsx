@@ -6,6 +6,7 @@ import { getAllPosts } from "@/lib/content";
 import { ArrowRight } from "@/components/brand/Icons";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/stories" },
   title: "Love stories — hintder",
   description:
     "Real people who matched, found the right words, and ended up in something real. The couples who started with one good message.",

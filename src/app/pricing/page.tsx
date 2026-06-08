@@ -5,6 +5,7 @@ import { PricingPlans } from "@/components/PricingCards";
 import { PricingFAQ } from "@/components/PricingFAQ";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/pricing" },
   title: "Pricing",
   description:
     "Subscribe for hints every month — Lite, Plus, Pro, or unlimited Ultimate. First 3 hints are free.",

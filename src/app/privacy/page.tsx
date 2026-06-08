@@ -4,6 +4,7 @@ import { LegalDoc } from "@/components/LegalDoc";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/privacy" },
   title: "Privacy Policy",
   description: "How Hintder collects, uses, and protects your data.",
 };
