@@ -3,14 +3,15 @@ import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { getAllPosts } from "@/lib/content";
+import { seo } from "@/lib/seo";
 import { ArrowRight } from "@/components/brand/Icons";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/stories" },
-  title: "Love stories — hintder",
+export const metadata: Metadata = seo({
+  path: "/stories",
+  title: "Love stories",
   description:
     "Real people who matched, found the right words, and ended up in something real. The couples who started with one good message.",
-};
+});
 
 export default function StoriesIndexPage() {
   const posts = getAllPosts("stories");

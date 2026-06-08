@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { seo, clampDescription } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
@@ -23,12 +24,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostWithHtml("guides", slug);
-  if (!post) return { title: "Guide — hintder" };
-  return {
-    title: `${post.title} — hintder`,
-    description: post.excerpt,
-    alternates: { canonical: `/guides/${slug}` },
-  };
+  if (!post) return { title: "Guide" };
+  const description = clampDescription(post.excerpt);
+  return seo({
+    path: `/guides/${slug}`,
+    title: post.seoTitle ?? post.title,
+    description,
+    ogTitle: post.title,
+    ogDescription: description,
+  });
 }
 
 export default async function GuidePostPage({

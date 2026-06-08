@@ -1,5 +1,6 @@
 ---
 title: "He Almost Didn't Send It. Now They Share One Coffee, Two Cups, Every Morning."
+seoTitle: "He Almost Didn't Send That Message"
 subtitle: "Marcus had matched with Lena for three days without typing a word. The line he finally sent is now a private joke they tell at dinner parties."
 excerpt: "Marcus, 31, Berlin. He'd given up on the apps — too tired to be charming on cue. Then he matched with Lena, sat on it for three days, and sent one line. Eleven months later they're picking a sofa together."
 category: "How they met"

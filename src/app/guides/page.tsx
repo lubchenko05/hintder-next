@@ -3,14 +3,15 @@ import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { getAllPosts } from "@/lib/content";
+import { seo } from "@/lib/seo";
 import { ArrowRight } from "@/components/brand/Icons";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/guides" },
-  title: "Guides — hintder",
+export const metadata: Metadata = seo({
+  path: "/guides",
+  title: "Guides",
   description:
     "Field guides for what actually works on dating apps in 2026. Openers, replies, asking her out, recovery scripts.",
-};
+});
 
 export default function GuidesIndexPage() {
   const posts = getAllPosts("guides");

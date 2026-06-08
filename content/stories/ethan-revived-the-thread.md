@@ -1,5 +1,6 @@
 ---
 title: "Seventeen Days of Silence. Then Two Years of Them."
+seoTitle: "He Revived a Thread That Looked Dead"
 subtitle: "Ethan and Maya warmed up fast, then both got busy and the thread went cold. He'd written it off. One message reopened a conversation that never really stopped after."
 excerpt: "Ethan, 29, Brooklyn. He matched with Maya, they clicked, then life got loud and the chat went quiet for over two weeks. He almost let it die. The reopen that didn't read as desperate turned into the great love of his twenties."
 category: "Almost didn't happen"

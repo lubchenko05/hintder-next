@@ -1,5 +1,6 @@
 ---
 title: "He'd Rushed Every Good Thing He Ever Had. With Her, He Finally Waited."
+seoTitle: "He Slowed Down and Finally Got It Right"
 subtitle: "Danny always asked too soon and watched it fizzle. The week he learned to read the moment instead of his own nerves, he met the person he's building a life with."
 excerpt: "Danny, 33, Toronto. His whole dating life was good conversations he ruined by moving too fast. Then he met Priya, let it breathe, and asked at exactly the right moment. They climb a trail every Saturday now."
 category: "Found each other"

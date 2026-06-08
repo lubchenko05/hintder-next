@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
+import { seo } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PricingPlans } from "@/components/PricingCards";
 import { PricingFAQ } from "@/components/PricingFAQ";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/pricing" },
+export const metadata: Metadata = seo({
+  path: "/pricing",
   title: "Pricing",
   description:
-    "Subscribe for hints every month — Lite, Plus, Pro, or unlimited Ultimate. First 3 hints are free.",
-};
+    "Subscribe for AI dating hints every month — Lite, Plus, Pro, or unlimited Ultimate. Unused hints roll over, your first 3 are free. Cancel anytime.",
+});
 
 export default function PricingPage() {
   return (

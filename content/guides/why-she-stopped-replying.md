@@ -1,5 +1,6 @@
 ---
 title: "Why She Stopped Replying — And What You Can Salvage"
+seoTitle: "Why She Stopped Replying (and How to Recover)"
 subtitle: "She was warming up. Then nothing. Here's the five reasons the thread cooled, and which ones are recoverable."
 excerpt: "Most 'ghosting' is recoverable if you understand the why. Five patterns, three recovery scripts, one rule about when to actually walk away."
 category: "Reply Coaching"

@@ -70,6 +70,9 @@ export interface ContentPost {
   slug: string;
   kind: ContentKind;
   title: string;
+  /** Optional short SEO <title> override — the display title can run longer
+   *  than the ~60-char limit search engines want. */
+  seoTitle?: string;
   subtitle?: string;
   excerpt: string;
   category: string;
@@ -109,6 +112,7 @@ function toPost(slug: string, kind: ContentKind, data: Record<string, unknown>):
     slug,
     kind,
     title: (data.title as string) ?? "",
+    seoTitle: data.seoTitle as string | undefined,
     subtitle: data.subtitle as string | undefined,
     excerpt: (data.excerpt as string) ?? "",
     category: (data.category as string) ?? "",

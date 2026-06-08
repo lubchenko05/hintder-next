@@ -1,5 +1,6 @@
 ---
 title: "She's the First Person He Texts Every Morning. It Started With a Sandwich Argument."
+seoTitle: "He Stopped Overthinking and Found Her"
 subtitle: "James used to spend an hour drafting a single message — and the energy was always gone by the time he sent it. With Maya, he finally just said the thing."
 excerpt: "James, 28, San Francisco. Good with people, exhausted by the apps. He matched with Maya, picked a line that sounded like him, and stopped overthinking. A year later he can't imagine his mornings without her."
 category: "Love story"

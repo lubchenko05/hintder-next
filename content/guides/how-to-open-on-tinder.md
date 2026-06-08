@@ -1,5 +1,6 @@
 ---
 title: "How to Open on Tinder Without Sounding Like Everyone Else"
+seoTitle: "How to Open on Tinder Without Being Generic"
 subtitle: "The first message is the only one she'll see if you fail. Here's what works in 2026."
 excerpt: "She gets fifty 'heys' a day. The men who reply at her get fifty too. Here's the open she actually responds to — and the patterns to avoid."
 category: "Openers"

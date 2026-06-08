@@ -1,5 +1,6 @@
 ---
 title: "Reading Her Prompts — What She's Actually Telling You"
+seoTitle: "How to Read Her Dating-App Prompts"
 subtitle: "Hinge prompts and Tinder bios aren't decoration. They're audition tapes. Here's how to read them."
 excerpt: "Every prompt she picked over the 47 others is a signal. Most men reply to the words. The good ones reply to the choice. Here's the difference."
 category: "Reading Profiles"
