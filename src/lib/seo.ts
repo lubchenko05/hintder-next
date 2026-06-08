@@ -14,6 +14,17 @@ const OG_TITLE = "Hintder — Your Dating Wingman";
 const OG_DESCRIPTION =
   "Upload a dating profile screenshot, get an opener that doesn't sound like everyone else — then a reply coach for the whole conversation. Your AI dating wingman.";
 
+/* The site OG image is produced by app/opengraph-image.tsx. Overriding a page's
+   openGraph drops the file-convention image, so we re-attach it here (kept in
+   sync with that file's `alt`/`size`) to keep og:image present and OG valid. */
+const OG_IMAGE = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: "Hintder — say the thing she'll actually reply to",
+  type: "image/png",
+} as const;
+
 export function seo(opts: {
   path: string;
   title?: string;
@@ -33,6 +44,7 @@ export function seo(opts: {
       type: "website",
       locale: "en_US",
       url: path,
+      images: [OG_IMAGE],
     },
   };
 }
