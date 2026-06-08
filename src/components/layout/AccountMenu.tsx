@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
@@ -39,9 +39,32 @@ export function AccountMenu({
   const { total } = useCredits();
   const { subscription, tierLabel, isUnlimited } = useSubscription();
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const initial = auth.email?.[0]?.toUpperCase() ?? "?";
   const hasPlan = subscription !== null && subscription.status === "active";
+
+  /* Close on a click/tap anywhere outside the menu, or on Escape. A
+     document-level listener (not a fixed overlay) is used because the sticky,
+     backdrop-blurred header is a containing block for `position: fixed`, which
+     would shrink an overlay catcher to the header's bounds. */
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   return (
     <div className="flex items-center gap-2.5">
@@ -87,7 +110,7 @@ export function AccountMenu({
         </Link>
       )}
 
-      <div className="relative">
+      <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label="Account menu"
@@ -118,15 +141,7 @@ export function AccountMenu({
         </button>
 
         {open && (
-          <>
-            {/* Click-away catcher */}
-            <button
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 cursor-default"
-              aria-hidden
-              tabIndex={-1}
-            />
-            {/* Dropdown — the one and only menu */}
+            /* Dropdown — the one and only menu */
             <div
               className="absolute right-0 top-full mt-2 w-64 rounded-2xl z-50 overflow-hidden animate-fade-up"
               style={{
@@ -293,7 +308,6 @@ export function AccountMenu({
                 sign out
               </button>
             </div>
-          </>
         )}
       </div>
     </div>
