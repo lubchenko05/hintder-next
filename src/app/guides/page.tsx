@@ -21,16 +21,6 @@ export default function GuidesIndexPage() {
       <main className="flex-1 pt-32 pb-24">
         <section className="px-5 sm:px-8 pb-16 sm:pb-20">
           <div className="mx-auto max-w-7xl">
-            <div
-              className="font-display italic text-[11.5px] tracking-[0.16em] uppercase text-flame inline-flex items-center gap-2 mb-5"
-              style={{ fontWeight: 400 }}
-            >
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
-                style={{ background: "var(--color-flame)" }}
-              />
-              field guides
-            </div>
             <h1
               className="font-display tracking-[-0.035em] leading-[0.92] text-[clamp(2.75rem,7vw,5.5rem)] max-w-4xl"
               style={{ fontWeight: 400, textWrap: "balance" }}
