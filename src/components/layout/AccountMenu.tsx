@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useInstall } from "@/components/pwa/InstallProvider";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────────────────────
@@ -38,6 +39,7 @@ export function AccountMenu({
   const { auth, signOut } = useAuth();
   const { total } = useCredits();
   const { subscription, tierLabel, isUnlimited } = useSubscription();
+  const { canInstall, promptInstall } = useInstall();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -281,6 +283,35 @@ export function AccountMenu({
                     </Link>
                   ))}
                 </div>
+              )}
+
+              {/* Install app — only when the browser reports it's installable
+                  (Chrome/Edge/Android, not yet installed). */}
+              {canInstall && (
+                <button
+                  onClick={async () => {
+                    setOpen(false);
+                    await promptInstall();
+                  }}
+                  className="w-full text-left px-4 py-3 border-t border-white/[0.05] font-display italic text-[13.5px] text-text-secondary hover:text-text hover:bg-white/[0.04] transition-colors inline-flex items-center gap-2.5"
+                  style={{ fontWeight: 300 }}
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 3v12" />
+                    <path d="M8 11l4 4 4-4" />
+                    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                  </svg>
+                  install app
+                </button>
               )}
 
               {/* Sign out */}

@@ -1,10 +1,12 @@
 "use client";
 
 import { Toaster } from "sonner";
+import { InstallProvider } from "@/components/pwa/InstallProvider";
+import { InstallBanner } from "@/components/pwa/InstallBanner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <InstallProvider>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -16,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
       />
       {children}
-    </>
+      <InstallBanner />
+    </InstallProvider>
   );
 }
