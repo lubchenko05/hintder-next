@@ -60,6 +60,15 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
       (window.navigator as unknown as { standalone?: boolean }).standalone === true;
     if (standalone) setInstalled(true);
 
+    const w = window as unknown as { __hintderBIP?: BeforeInstallPromptEvent | null };
+
+    /* The inline capture script (app/layout) may have stashed the event before
+       React mounted — pick it up now. */
+    if (w.__hintderBIP) setDeferred(w.__hintderBIP);
+
+    const onBipReady = () => {
+      if (w.__hintderBIP) setDeferred(w.__hintderBIP);
+    };
     const onBeforeInstall = (e: Event) => {
       e.preventDefault(); // stash it; we'll trigger the dialog from our UI
       setDeferred(e as BeforeInstallPromptEvent);
@@ -67,10 +76,15 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
     const onInstalled = () => {
       setInstalled(true);
       setDeferred(null);
+      w.__hintderBIP = null;
     };
+    window.addEventListener("hintder:bip", onBipReady);
+    window.addEventListener("hintder:installed", onInstalled);
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
+      window.removeEventListener("hintder:bip", onBipReady);
+      window.removeEventListener("hintder:installed", onInstalled);
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
     };
@@ -78,13 +92,17 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
 
   const promptInstall = useCallback(async (): Promise<InstallOutcome> => {
     if (!deferred) return "unavailable";
+    const clear = () => {
+      setDeferred(null); // the event is single-use
+      (window as unknown as { __hintderBIP?: unknown }).__hintderBIP = null;
+    };
     try {
       await deferred.prompt();
       const choice = await deferred.userChoice;
-      setDeferred(null); // the event is single-use
+      clear();
       return choice.outcome;
     } catch {
-      setDeferred(null);
+      clear();
       return "unavailable";
     }
   }, [deferred]);
