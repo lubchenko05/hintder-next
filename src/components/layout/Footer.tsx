@@ -26,6 +26,11 @@ const featuredBadges = [
     src: "https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=dark",
     alt: "Featured on Fazier",
   },
+  {
+    href: "https://startupfa.me/s/hintder?utm_source=hintder.ai",
+    src: "https://startupfa.me/badges/featured/dark.webp",
+    alt: "hintder - Featured on Startup Fame",
+  },
 ] as const;
 
 export function Footer() {
