@@ -48,7 +48,27 @@ export function Footer() {
           </nav>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-white/[0.04] flex items-center justify-between font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
+        {/* Featured-on badges */}
+        <div className="mt-10 flex flex-wrap items-center gap-3">
+          <a
+            href="https://twelve.tools"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Featured on Twelve Tools"
+            className="inline-flex opacity-80 hover:opacity-100 transition-opacity"
+          >
+            {/* third-party badge — plain img (external SVG, not next/image) */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://twelve.tools/badge0-dark.svg"
+              alt="Featured on Twelve Tools"
+              width={200}
+              height={54}
+            />
+          </a>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-white/[0.04] flex items-center justify-between font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
           <span>© {new Date().getFullYear()} hintder</span>
           <span>made for the brave</span>
         </div>
