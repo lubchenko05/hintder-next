@@ -66,6 +66,21 @@ export function Footer() {
               height={54}
             />
           </a>
+          <a
+            href="https://wired.business"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Featured on Wired Business"
+            className="inline-flex opacity-80 hover:opacity-100 transition-opacity"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://wired.business/badge0-dark.svg"
+              alt="Featured on Wired Business"
+              width={200}
+              height={54}
+            />
+          </a>
         </div>
 
         <div className="mt-6 pt-6 border-t border-white/[0.04] flex items-center justify-between font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
