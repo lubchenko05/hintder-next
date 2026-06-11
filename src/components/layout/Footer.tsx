@@ -71,6 +71,11 @@ const featuredBadges = [
     src: "https://sellwithboost.com/badge/listing-dark.svg",
     alt: "Listed on Sell With Boost",
   },
+  {
+    href: "https://startupfa.st",
+    src: "https://startupfa.st/images/badges/powered-by-dark.svg",
+    alt: "Powered by Startup Fast",
+  },
 ] as const;
 
 export function Footer() {
