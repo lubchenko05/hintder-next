@@ -10,6 +10,24 @@ const footerLinks = [
   { label: "Refund", href: "/refund" },
 ] as const;
 
+const featuredBadges = [
+  {
+    href: "https://twelve.tools",
+    src: "https://twelve.tools/badge0-dark.svg",
+    alt: "Featured on Twelve Tools",
+  },
+  {
+    href: "https://wired.business",
+    src: "https://wired.business/badge0-dark.svg",
+    alt: "Featured on Wired Business",
+  },
+  {
+    href: "https://fazier.com",
+    src: "https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=dark",
+    alt: "Featured on Fazier",
+  },
+] as const;
+
 export function Footer() {
   return (
     <footer className="border-t border-white/[0.04]">
@@ -48,39 +66,22 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Featured-on badges */}
-        <div className="mt-10 flex flex-wrap items-center gap-3">
-          <a
-            href="https://twelve.tools"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Featured on Twelve Tools"
-            className="inline-flex opacity-80 hover:opacity-100 transition-opacity"
-          >
-            {/* third-party badge — plain img (external SVG, not next/image) */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://twelve.tools/badge0-dark.svg"
-              alt="Featured on Twelve Tools"
-              width={200}
-              height={54}
-            />
-          </a>
-          <a
-            href="https://wired.business"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Featured on Wired Business"
-            className="inline-flex opacity-80 hover:opacity-100 transition-opacity"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://wired.business/badge0-dark.svg"
-              alt="Featured on Wired Business"
-              width={200}
-              height={54}
-            />
-          </a>
+        {/* Featured-on badges — dim + grayscale, normalised to one height; they
+            brighten to colour on hover. Third-party SVGs → plain img. */}
+        <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3">
+          {featuredBadges.map((b) => (
+            <a
+              key={b.href}
+              href={b.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={b.alt}
+              className="inline-flex opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={b.src} alt={b.alt} className="h-9 w-auto" />
+            </a>
+          ))}
         </div>
 
         <div className="mt-6 pt-6 border-t border-white/[0.04] flex items-center justify-between font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
