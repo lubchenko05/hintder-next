@@ -71,11 +71,6 @@ const featuredBadges = [
     src: "https://startupfa.st/images/badges/powered-by-dark.svg",
     alt: "Powered by Startup Fast",
   },
-  {
-    href: "https://neeed.directory/products/hintder-ai?utm_source=hintder-ai",
-    src: "https://neeed.directory/badges/neeed-badge-dark.svg",
-    alt: "Featured on neeed.directory",
-  },
 ] as const;
 
 export function Footer() {
