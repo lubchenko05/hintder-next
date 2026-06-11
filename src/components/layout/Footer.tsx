@@ -36,6 +36,16 @@ const featuredBadges = [
     src: "https://auraplusplus.com/images/badges/featured-on-dark.svg",
     alt: "Featured on Aura++",
   },
+  {
+    href: "https://saasfame.com/item/hintder",
+    src: "https://saasfame.com/badge-dark.svg",
+    alt: "Featured on SaaS Fame",
+  },
+  {
+    href: "https://toolfame.com/item/hintder",
+    src: "https://toolfame.com/badge-dark.svg",
+    alt: "Featured on Tool Fame",
+  },
 ] as const;
 
 export function Footer() {
