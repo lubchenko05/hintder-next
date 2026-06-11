@@ -31,6 +31,11 @@ const featuredBadges = [
     src: "https://startupfa.me/badges/featured/dark.webp",
     alt: "hintder - Featured on Startup Fame",
   },
+  {
+    href: "https://auraplusplus.com/projects/hintder-ai-dating-profile-opener-coach",
+    src: "https://auraplusplus.com/images/badges/featured-on-dark.svg",
+    alt: "Featured on Aura++",
+  },
 ] as const;
 
 export function Footer() {
