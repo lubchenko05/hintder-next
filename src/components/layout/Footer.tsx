@@ -52,11 +52,6 @@ const featuredBadges = [
     alt: "Featured on AgentWork.Tools",
   },
   {
-    href: "https://similarlabs.com",
-    src: "https://similarlabs.com/similarlabs-embed-badge-dark.svg",
-    alt: "Listed on SimilarLabs",
-  },
-  {
     href: "https://findly.tools/hintder-ai?utm_source=hintder-ai",
     src: "https://findly.tools/badges/findly-tools-badge-dark.svg",
     alt: "Featured on Findly.tools",
