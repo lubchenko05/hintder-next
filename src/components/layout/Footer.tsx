@@ -46,6 +46,31 @@ const featuredBadges = [
     src: "https://toolfame.com/badge-dark.svg",
     alt: "Featured on Tool Fame",
   },
+  {
+    href: "https://agentwork.tools",
+    src: "https://agentwork.tools/badge/badge_transparent.svg",
+    alt: "Featured on AgentWork.Tools",
+  },
+  {
+    href: "https://similarlabs.com",
+    src: "https://similarlabs.com/similarlabs-embed-badge-dark.svg",
+    alt: "Listed on SimilarLabs",
+  },
+  {
+    href: "https://findly.tools/hintder-ai?utm_source=hintder-ai",
+    src: "https://findly.tools/badges/findly-tools-badge-dark.svg",
+    alt: "Featured on Findly.tools",
+  },
+  {
+    href: "https://turbo0.com/item/hintder",
+    src: "https://img.turbo0.com/badge-listed-dark.svg",
+    alt: "Listed on Turbo0",
+  },
+  {
+    href: "https://sellwithboost.com",
+    src: "https://sellwithboost.com/badge/listing-dark.svg",
+    alt: "Listed on Sell With Boost",
+  },
 ] as const;
 
 export function Footer() {
