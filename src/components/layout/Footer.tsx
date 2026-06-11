@@ -48,7 +48,7 @@ const featuredBadges = [
   },
   {
     href: "https://agentwork.tools",
-    src: "https://agentwork.tools/badge/badge_transparent.svg",
+    src: "https://agentwork.tools/badge/badge_dark.svg",
     alt: "Featured on AgentWork.Tools",
   },
   {
