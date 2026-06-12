@@ -71,6 +71,26 @@ const featuredBadges = [
     src: "https://startupfa.st/images/badges/powered-by-dark.svg",
     alt: "Powered by Startup Fast",
   },
+  {
+    href: "https://submitaitools.org",
+    src: "https://submitaitools.org/static_submitaitools/images/submitaitools.png",
+    alt: "Submit AI Tools",
+  },
+  {
+    href: "https://dang.ai",
+    src: "https://assets.dang.ai/badges/dang-verified-dark.png",
+    alt: "Verified on DANG!",
+  },
+  {
+    href: "https://ufind.best/products/hintder-YO1n?utm_source=ufind.best",
+    src: "https://ufind.best/badges/ufind-best-badge-light.svg",
+    alt: "Featured on ufind.best",
+  },
+  {
+    href: "https://newtool.site/item/hintder",
+    src: "https://newtool.site/badges/newtool-dark.svg",
+    alt: "Featured on NewTool.site",
+  },
 ] as const;
 
 export function Footer() {
