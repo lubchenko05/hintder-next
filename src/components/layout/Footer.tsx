@@ -91,6 +91,36 @@ const featuredBadges = [
     src: "https://newtool.site/badges/newtool-dark.svg",
     alt: "Featured on NewTool.site",
   },
+  {
+    href: "https://trylaunch.ai/launch/hintder-ai",
+    src: "https://trylaunch.ai/badges/badge-white.png",
+    alt: "Featured on Launch",
+  },
+  {
+    href: "https://submitmysaas.com",
+    src: "https://submitmysaas.com/featured-badge.png",
+    alt: "Featured on SubmitMySaas",
+  },
+  {
+    href: "https://www.freeai.run",
+    src: "https://www.freeai.run/badge/badge_transparent.svg",
+    alt: "Featured on FreeAI",
+  },
+  {
+    href: "https://aidirs.best/item/hintder",
+    src: "https://aidirs.best/dark.svg",
+    alt: "Featured on Aidirs",
+  },
+  {
+    href: "https://firstlook.tools",
+    src: "https://firstlook.tools/badge/badge_dark.svg",
+    alt: "Featured on First Look",
+  },
+  {
+    href: "https://smollaunch.com",
+    src: "https://smollaunch.com/badges/featured-dark.svg",
+    alt: "Featured on Smol Launch",
+  },
 ] as const;
 
 export function Footer() {
