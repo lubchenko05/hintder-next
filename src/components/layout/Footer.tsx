@@ -163,7 +163,7 @@ export function Footer() {
 
         {/* Featured-on badges — dim + grayscale, normalised to one height; they
             brighten to colour on hover. Third-party SVGs → plain img. */}
-        <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-6 place-items-center">
           {featuredBadges.map((b) => (
             <a
               key={b.href}
@@ -171,10 +171,10 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={b.alt}
-              className="inline-flex opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all"
+              className="flex items-center justify-center opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={b.src} alt={b.alt} className="h-9 w-auto" />
+              <img src={b.src} alt={b.alt} className="h-8 w-auto max-w-full" />
             </a>
           ))}
         </div>
