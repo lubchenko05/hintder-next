@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 
-type Badge = { href: string; src: string; alt: string };
+type Badge = {
+  href: string;
+  alt: string;
+  /** Hosted badge image. */
+  src?: string;
+  /** Fallback for badges that ship only as inline SVG / text: a uniform
+   *  logo + label chip so they match the image badges. */
+  logo?: string;
+  label?: string;
+};
 
 /**
  * Rotates the "featured on" backlink badges through a single small slot, one
@@ -43,8 +52,23 @@ export default function BadgeRotator({ badges }: { badges: Badge[] }) {
                   : "opacity-0 translate-y-1.5 pointer-events-none"
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={b.src} alt={b.alt} className="h-8 w-auto max-w-full" />
+              {b.src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={b.src} alt={b.alt} className="h-8 w-auto max-w-full" />
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  {b.logo && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={b.logo} alt="" className="h-5 w-5 rounded-sm" />
+                  )}
+                  <span
+                    className="font-display text-[13px] text-text whitespace-nowrap"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {b.label}
+                  </span>
+                </span>
+              )}
             </a>
           );
         })}

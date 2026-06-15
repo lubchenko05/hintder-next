@@ -122,6 +122,84 @@ const featuredBadges = [
     src: "https://smollaunch.com/badges/featured-dark.svg",
     alt: "Featured on Smol Launch",
   },
+  {
+    href: "https://bestsky.tools?utm_source=badge",
+    src: "https://assets.bestsky.tools/badges/featured-light.svg",
+    alt: "Featured on BestskyTools",
+  },
+  {
+    href: "https://www.scrolllaunch.com/products/hintder?utm_source=badge&utm_medium=embed&utm_campaign=hintder&ref=scrolllaunch",
+    src: "https://www.scrolllaunch.com/api/badge/hintder",
+    alt: "Featured on ScrollLaunch",
+  },
+  {
+    href: "https://backlinkdirs.com/item/hintder",
+    src: "https://backlinkdirs.com/badges/badge-listed-dark.svg",
+    alt: "Listed on Backlink Dirs",
+  },
+  {
+    href: "https://theonestartup.com",
+    src: "https://theonestartup.com/badages-awards.svg",
+    alt: "Featured on The One Startup",
+  },
+  {
+    href: "https://dayslaunch.com",
+    src: "https://dayslaunch.com/badages-awards.svg",
+    alt: "Featured on Days Launch",
+  },
+  {
+    href: "https://codetrendy.com",
+    src: "https://codetrendy.com/api/badge?style=dark",
+    alt: "Surfaced on CodeTrendy",
+  },
+  {
+    href: "https://toolrain.com/item/hintder",
+    src: "https://toolrain.com/badges/badge-listed-dark.svg",
+    alt: "Listed on ToolRain",
+  },
+  {
+    href: "https://showmebest.ai",
+    src: "https://showmebest.ai/badge/feature-badge-dark.webp",
+    alt: "Featured on ShowMeBestAI",
+  },
+  {
+    href: "https://solvertools.com/tool/hintder",
+    src: "https://solvertools.com/assets/images/badge-dark.png",
+    alt: "Solver Tools",
+  },
+  {
+    href: "https://similarlabs.com",
+    src: "https://similarlabs.com/similarlabs-embed-badge-dark.svg",
+    alt: "Listed on SimilarLabs",
+  },
+  {
+    href: "https://domainrank.app",
+    src: "https://domainrank.app/api/badge/hintder.ai?theme=dark",
+    alt: "hintder.ai Domain Rating",
+  },
+  {
+    href: "https://aibesttop.com",
+    src: "https://aibesttop.com/badges/dark.svg",
+    alt: "AIBestTop - AI Tools Directory",
+  },
+  // Badges that ship only as inline SVG / text (no hosted image) — rendered as a
+  // uniform logo+label chip so they match the rest instead of their own styling.
+  {
+    href: "https://indie.deals?ref=https%3A%2F%2Fhintder.ai",
+    alt: "Find us on Indie.Deals",
+    logo: "https://indie.deals/logo_badge.png",
+    label: "Indie.Deals",
+  },
+  {
+    href: "https://www.tinystartups.com/startup/hintder-ai",
+    alt: "Launched on Tiny Startups",
+    label: "Tiny Startups",
+  },
+  {
+    href: "https://allinai.tools",
+    alt: "All in AI Tools",
+    label: "All in AI Tools",
+  },
 ] as const;
 
 export function Footer() {
