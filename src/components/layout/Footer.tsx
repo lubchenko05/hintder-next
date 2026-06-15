@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Mark } from "@/components/brand/Mark";
+import BadgeRotator from "@/components/layout/BadgeRotator";
 
 const footerLinks = [
   { label: "Guides", href: "/guides" },
@@ -161,23 +162,9 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Featured-on badges — dim + grayscale, normalised to one height; they
-            brighten to colour on hover. Third-party SVGs → plain img. */}
-        <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-6 place-items-center">
-          {featuredBadges.map((b) => (
-            <a
-              key={b.href}
-              href={b.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={b.alt}
-              className="flex items-center justify-center opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={b.src} alt={b.alt} className="h-8 w-auto max-w-full" />
-            </a>
-          ))}
-        </div>
+        {/* Featured-on backlink badges — rotated through one compact slot so
+            they keep their crawlable links without dominating the footer. */}
+        <BadgeRotator badges={featuredBadges} />
 
         <div className="mt-6 pt-6 border-t border-white/[0.04] flex items-center justify-between font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
           <span>© {new Date().getFullYear()} hintder</span>
