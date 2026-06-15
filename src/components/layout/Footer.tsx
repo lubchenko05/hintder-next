@@ -123,11 +123,6 @@ const featuredBadges = [
     alt: "Featured on Smol Launch",
   },
   {
-    href: "https://bestsky.tools?utm_source=badge",
-    src: "https://assets.bestsky.tools/badges/featured-light.svg",
-    alt: "Featured on BestskyTools",
-  },
-  {
     href: "https://www.scrolllaunch.com/products/hintder?utm_source=badge&utm_medium=embed&utm_campaign=hintder&ref=scrolllaunch",
     src: "https://www.scrolllaunch.com/api/badge/hintder",
     alt: "Featured on ScrollLaunch",
