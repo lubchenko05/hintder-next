@@ -195,6 +195,11 @@ const featuredBadges = [
     alt: "All in AI Tools",
     label: "All in AI Tools",
   },
+  {
+    href: "https://goodaitools.com/ai/hintder",
+    src: "https://goodaitools.com/assets/images/badge-dark.png",
+    alt: "Good AI Tools",
+  },
 ] as const;
 
 export function Footer() {
