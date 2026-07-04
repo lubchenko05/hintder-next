@@ -8,7 +8,7 @@ import { ArrowRight } from "@/components/brand/Icons";
 
 export const metadata: Metadata = seo({
   path: "/guides",
-  title: "Guides",
+  title: "Dating App Guides — Openers, Replies & Recovery",
   description:
     "Field guides for what actually works on dating apps in 2026. Openers, replies, asking her out, recovery scripts.",
 });

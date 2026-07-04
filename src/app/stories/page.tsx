@@ -8,7 +8,7 @@ import { ArrowRight } from "@/components/brand/Icons";
 
 export const metadata: Metadata = seo({
   path: "/stories",
-  title: "Love stories",
+  title: "Dating Success Stories — Real Openers That Worked",
   description:
     "Real people who matched, found the right words, and ended up in something real. The couples who started with one good message.",
 });
