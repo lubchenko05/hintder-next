@@ -31,6 +31,18 @@ interface MatchSidebarProps {
   onDeleteMatch?: (id: string) => void;
 }
 
+/* A match is "quiet" (worth a nudge) when it's still open, the thread has
+   started, and it hasn't been touched in a couple of days — the retention moment
+   (Track 2). Tapping the row resumes it straight into the reply coach. */
+const QUIET_MS = 2 * 24 * 60 * 60 * 1000;
+function isQuiet(m: MatchHistoryEntry): boolean {
+  return (
+    m.status === "in_progress" &&
+    m.conversation.length > 0 &&
+    Date.now() - m.updatedAt > QUIET_MS
+  );
+}
+
 export function MatchSidebar({
   matches,
   activeId,
@@ -171,6 +183,15 @@ export function MatchSidebar({
                   >
                     {timeAgo(m.updatedAt)}
                   </div>
+                  {isQuiet(m) && (
+                    <div
+                      className="mt-1.5 inline-flex items-center gap-1.5 font-display italic text-[10.5px] text-flame"
+                      style={{ fontWeight: 400 }}
+                    >
+                      <span className="w-1 h-1 rounded-full bg-flame animate-pulse" />
+                      gone quiet — tap to revive
+                    </div>
+                  )}
                 </div>
               </li>
             ))}

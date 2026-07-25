@@ -113,6 +113,32 @@ export interface FollowUpAnalysis {
   urgencyWarning?: string;
 }
 
+/** Track 4 — a decode of one message from her. */
+export interface DecodeResult {
+  meaning: string;
+  interestLevel: "high" | "medium" | "low" | "unclear";
+  mood: string;
+  losingInterest: boolean;
+  move: string;
+  avoid: string;
+}
+
+/** Track 4 — feedback on one of the user's OWN profile photos. */
+export interface PhotoFeedback {
+  slot: number;
+  verdict: "keep" | "lead" | "cut" | "move";
+  note: string;
+}
+
+/** Track 4 — a review of the user's OWN dating profile. */
+export interface ProfileOptimizeResult {
+  score: number;
+  firstImpression: string;
+  bioRewrites: string[];
+  photoFeedback: PhotoFeedback[];
+  topFixes: string[];
+}
+
 export interface ConversationTurn {
   id: string;
   role: "me" | "her";
