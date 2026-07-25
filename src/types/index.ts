@@ -72,6 +72,9 @@ export interface ProfileAnalysis {
   timingWindow?: string;
   /** A short list of conversation topics that should land. */
   greenLightTopics?: string[];
+  /** Dense free-text read of everything the model saw — carried forward as the
+      context for openers/replies (so screenshots are never re-sent). */
+  detailedRead?: string;
   /** One free opener per voice × risk — the StylePicker preview matrix. */
   previews?: PreviewOpener[];
   /** gs:// URIs of the uploaded screenshots (kept 30 days). Not directly
@@ -86,6 +89,8 @@ export interface GeneratedMessage {
   label: string;
   cringeRisk: number; // 0-100
   tone: string;
+  /** Coach line — one short "why this lands", revealed on demand. */
+  whyItWorks?: string;
 }
 
 export interface FollowUpAnalysis {

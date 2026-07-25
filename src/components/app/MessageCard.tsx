@@ -42,6 +42,7 @@ export function MessageCard({
   const [copied, setCopied] = useState(false);
   const [tweakOpen, setTweakOpen] = useState(false);
   const [tweaking, setTweaking] = useState(false);
+  const [whyOpen, setWhyOpen] = useState(false);
 
   const runTweak = async (opt: string) => {
     setTweakOpen(false);
@@ -160,6 +161,39 @@ export function MessageCard({
       >
         {message.text}
       </p>
+
+      {/* Coach — "why this works", revealed on demand */}
+      {message.whyItWorks && (
+        <>
+          <button
+            onClick={() => setWhyOpen((v) => !v)}
+            className="mb-3 inline-flex items-center gap-1 font-display italic text-[11.5px] text-text-muted hover:text-flame transition-colors"
+            style={{ fontWeight: 300 }}
+          >
+            {whyOpen ? "hide why" : "why this works"}
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              className={cn("transition-transform", whyOpen && "rotate-180")}
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          {whyOpen && (
+            <p
+              className="mb-4 font-display italic text-[12.5px] text-text-secondary leading-[1.5] border-l-2 border-flame/30 pl-3"
+              style={{ fontWeight: 300 }}
+            >
+              {message.whyItWorks}
+            </p>
+          )}
+        </>
+      )}
 
       {/* Cringe meter */}
       <div className="flex items-center gap-3 mb-2">
