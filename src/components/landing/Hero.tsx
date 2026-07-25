@@ -308,6 +308,14 @@ export function Hero() {
               className="text-white hidden sm:block transition-transform group-hover:translate-x-0.5"
             />
           </Link>
+          {/* Secondary — try a sample read, no upload / no signup (Track 3) */}
+          <Link
+            href="/app?demo=1"
+            className="self-start font-display italic text-[14px] text-text-muted hover:text-flame transition-colors underline decoration-white/20 underline-offset-4"
+            style={{ fontWeight: 300 }}
+          >
+            or see it on a sample profile first
+          </Link>
         </div>
 
         {/* RIGHT — deck */}

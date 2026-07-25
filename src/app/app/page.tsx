@@ -117,6 +117,10 @@ export default function AppPage() {
     activeMatchId,
     credits,
     paywallOpen,
+    startDemo,
+    isDemo,
+    demoGateOpen,
+    closeDemoGate,
   } = useAppFlow();
   const router = useRouter();
 
@@ -165,6 +169,19 @@ export default function AppPage() {
   /* After a payment round-trip (/checkout/success → /app?resumed=1), restore the
      match the user was working on so they land back where they left off — not on
      a blank upload. Runs once, after the match list has loaded. */
+  /* Track 3 — "try a sample" demo. /app?demo=1 seeds a bundled read with no
+     upload, no signup, no hint, no paywall. Runs once at mount. */
+  const demoRef = useRef(false);
+  useEffect(() => {
+    if (demoRef.current || typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("demo") !== "1") return;
+    demoRef.current = true;
+    startDemo();
+    setSelectedMatchId(null);
+    setMobileView("detail");
+    window.history.replaceState(null, "", "/app");
+  }, [startDemo]);
+
   const resumedRef = useRef(false);
   useEffect(() => {
     if (resumedRef.current || typeof window === "undefined") return;
@@ -531,6 +548,79 @@ export default function AppPage() {
 
       {/* Silence unused-var warning for ArrowLeft (used by past view variants) */}
       {false && <ArrowLeft />}
+
+      {/* Demo (Track 3): a subtle ribbon while viewing the sample profile. */}
+      {isDemo && !demoGateOpen && (
+        <div className="fixed inset-x-0 bottom-0 z-[55] flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none">
+          <div
+            className="pointer-events-auto flex items-center gap-3 rounded-full pl-4 pr-2 py-2"
+            style={{
+              background: "linear-gradient(180deg, rgba(25,20,30,0.98), rgba(15,12,20,0.98))",
+              border: "1px solid rgba(255,255,255,0.10)",
+              boxShadow: "0 16px 40px -18px rgba(0,0,0,0.7)",
+            }}
+          >
+            <span
+              className="font-display italic text-[12.5px] text-text-secondary"
+              style={{ fontWeight: 300 }}
+            >
+              you&apos;re viewing a sample profile
+            </span>
+            <button
+              onClick={() => router.push("/signin?next=/app")}
+              className="rounded-full px-3.5 py-1.5 font-display italic text-white text-[12.5px] transition-transform hover:scale-[1.03] active:scale-95"
+              style={{
+                background: "linear-gradient(95deg, #FE3C72, #FF8552)",
+                fontWeight: 400,
+              }}
+            >
+              run it on yours →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Demo gate — any hint-costing action asks for a free sign-up. */}
+      {demoGateOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center px-5 bg-black/70 backdrop-blur-sm"
+          onClick={closeDemoGate}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-6 text-center animate-fade-up"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "linear-gradient(180deg, rgba(25,20,30,0.98), rgba(15,12,20,0.98))",
+              border: "1px solid rgba(255,255,255,0.10)",
+              boxShadow: "0 30px 60px -20px rgba(0,0,0,0.8)",
+            }}
+          >
+            <div className="font-display text-[18px] text-text mb-2" style={{ fontWeight: 500 }}>
+              Like what you see?
+            </div>
+            <p
+              className="font-display italic text-[13.5px] text-text-secondary leading-[1.5] mb-5"
+              style={{ fontWeight: 300 }}
+            >
+              Sign up free and run it on YOUR match — the first 3 reads are on us.
+            </p>
+            <button
+              onClick={() => router.push("/signin?next=/app")}
+              className="w-full py-3 rounded-xl font-display italic text-white text-[14px] transition-transform hover:scale-[1.01] active:scale-[0.99]"
+              style={{ background: "linear-gradient(95deg, #FE3C72, #FF8552)", fontWeight: 400 }}
+            >
+              start free
+            </button>
+            <button
+              onClick={closeDemoGate}
+              className="mt-2 w-full py-2 font-display italic text-[12.5px] text-text-muted hover:text-text transition-colors"
+              style={{ fontWeight: 300 }}
+            >
+              keep looking at the demo
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
