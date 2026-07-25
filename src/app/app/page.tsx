@@ -472,6 +472,23 @@ export default function AppPage() {
                     onFilesSelected={handleUpload}
                     isAnalyzing={isLoading}
                   />
+                  {/* Track 4 tools — decode a reply / rate your own profile. */}
+                  <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+                    <Link
+                      href="/decode"
+                      className="font-display italic text-[13px] text-text-muted hover:text-flame transition-colors"
+                      style={{ fontWeight: 300 }}
+                    >
+                      decode her reply →
+                    </Link>
+                    <Link
+                      href="/optimize"
+                      className="font-display italic text-[13px] text-text-muted hover:text-flame transition-colors"
+                      style={{ fontWeight: 300 }}
+                    >
+                      rate my profile →
+                    </Link>
+                  </div>
                 </div>
               )}
 
