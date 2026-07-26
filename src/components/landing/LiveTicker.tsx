@@ -86,8 +86,20 @@ function pickSlot(
   };
 }
 
+/* Deterministic first paint: without this the strip is empty until hydration +
+   a CSS animation run, so it silently disappears whenever JS is slow/blocked. */
+const SSR_SEED: Slot[] = [8, 32, 56, 80].map((left, i) => ({
+  id: -(i + 1), // negative ids mark the seeded (always-visible) rows
+  left,
+  top: [30, 60, 25, 65][i],
+  ttl: 6000,
+  born: 0,
+  age: `${2 + i * 3}m`,
+  ...EVENTS[i % EVENTS.length],
+}));
+
 export function LiveTicker() {
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots] = useState<Slot[]>(SSR_SEED);
   const [isMobile, setIsMobile] = useState(false);
 
   /* Track viewport — mobile = under sm breakpoint (640px) */
@@ -197,8 +209,12 @@ export function LiveTicker() {
             style={{
               left: `${s.left}%`,
               top: `${s.top}%`,
-              opacity: 0,
-              animation: `ticker-life ${s.ttl}ms ease-out forwards`,
+              /* Seeded (SSR) rows start visible; live ones fade in via the
+                 animation. Visibility must never depend on the animation. */
+              opacity: s.id < 0 ? 0.85 : 0,
+              transform: "translateY(-50%)",
+              animation:
+                s.id < 0 ? undefined : `ticker-life ${s.ttl}ms ease-out forwards`,
               willChange: "opacity, transform",
             }}
           >

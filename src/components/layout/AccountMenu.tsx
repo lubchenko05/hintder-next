@@ -145,13 +145,20 @@ export function AccountMenu({
         {open && (
             /* Dropdown — the one and only menu */
             <div
-              className="absolute right-0 top-full mt-2 w-64 rounded-2xl z-50 overflow-hidden animate-fade-up"
+              className="absolute right-0 top-full mt-3 w-64 rounded-2xl z-50 overflow-hidden animate-fade-up"
               style={{
+                /* Same glass as the header bar — a solid panel hanging off a
+                   translucent bar looks like two different apps. */
+                /* Frosted, not clear: a menu you can read the page through is
+                   a menu you can't read. The dark base carries legibility, the
+                   blur and the speculars carry the glass. */
+                backdropFilter: "blur(30px) saturate(180%)",
+                WebkitBackdropFilter: "blur(30px) saturate(180%)",
                 background:
-                  "linear-gradient(180deg, rgba(25,20,30,0.98), rgba(15,12,20,0.98))",
-                border: "1px solid rgba(255,255,255,0.08)",
+                  "linear-gradient(180deg, rgba(24,19,28,0.86), rgba(13,11,17,0.90))",
+                border: "1px solid rgba(255,255,255,0.10)",
                 boxShadow:
-                  "0 24px 50px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)",
+                  "0 24px 54px -18px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.20), inset 0 -1px 0 rgba(255,255,255,0.06)",
               }}
             >
               {/* Identity */}

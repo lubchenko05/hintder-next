@@ -209,10 +209,14 @@ export const readsApi = {
       body: { message_text: messageText, instruction, tone },
     }),
   /** Track 4 — decode one message from her (meaning + the move). */
-  decode: (herMessage: string, analysis?: ProfileAnalysis | null) =>
+  decode: (
+    herMessage: string,
+    images: string[] = [],
+    analysis?: ProfileAnalysis | null,
+  ) =>
     apiFetch<DecodeResult>("/reads/decode", {
       method: "POST",
-      body: { her_message: herMessage, analysis: analysis ?? null },
+      body: { her_message: herMessage, images, analysis: analysis ?? null },
     }),
   /** Track 4 — review the user's OWN profile (score + bio + photo feedback). */
   optimize: (images: string[], bio?: string | null) =>

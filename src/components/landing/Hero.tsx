@@ -246,7 +246,7 @@ export function Hero() {
   }, [hasInteracted]);
 
   return (
-    <section className="relative min-h-[88vh] overflow-hidden">
+    <section className="relative min-h-[82vh] overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div
           className="absolute top-0 left-0 right-0 h-[80vh]"
@@ -256,7 +256,7 @@ export function Hero() {
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 pt-16 sm:pt-24 lg:pt-36 pb-32 sm:pb-36 lg:pb-32 grid lg:grid-cols-[1.2fr_360px] gap-8 sm:gap-12 lg:gap-24 items-center">
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 pt-28 sm:pt-32 lg:pt-36 pb-20 sm:pb-24 lg:pb-24 grid lg:grid-cols-[1.2fr_360px] gap-8 sm:gap-12 lg:gap-24 items-center">
         {/* LEFT — single voice editorial headline */}
         <div className="space-y-6 sm:space-y-10 lg:space-y-12 max-w-2xl">
           <h1
@@ -283,6 +283,9 @@ export function Hero() {
             Drop her profile. We catch the thread, write the line, you keep the hint. The first one&apos;s on us.
           </p>
 
+          {/* CTA block — the pill plus its secondary link, grouped so the
+              parent's space-y doesn't push them far apart. */}
+          <div className="flex flex-col items-start gap-3.5">
           {/* Single huge CTA — solid red pill */}
           <Link
             href="/app"
@@ -308,14 +311,7 @@ export function Hero() {
               className="text-white hidden sm:block transition-transform group-hover:translate-x-0.5"
             />
           </Link>
-          {/* Secondary — try a sample read, no upload / no signup (Track 3) */}
-          <Link
-            href="/app?demo=1"
-            className="self-start font-display italic text-[14px] text-text-muted hover:text-flame transition-colors underline decoration-white/20 underline-offset-4"
-            style={{ fontWeight: 300 }}
-          >
-            or see it on a sample profile first
-          </Link>
+          </div>
         </div>
 
         {/* RIGHT — deck */}
@@ -392,7 +388,7 @@ export function Hero() {
             );
           })}
 
-          <div className="absolute -bottom-28 sm:-bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-4 pb-4">
+          <div className="absolute -bottom-24 sm:-bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-4 pb-4">
             <button
               onClick={() => userCommit("left")}
               className="group w-12 h-12 rounded-full border border-white/15 bg-white/[0.03] backdrop-blur-md hover:border-danger/60 hover:bg-danger/10 active:scale-90 transition-all flex items-center justify-center text-white/70 hover:text-danger"

@@ -25,7 +25,18 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+/* Init is deliberately defensive: this module is imported by the layout tree,
+   so ANY throw here (bad/missing config, an unauthorised host, a blocked
+   storage API) would crash the client bundle before React hydrates — leaving a
+   dead page where nothing is clickable. Failing soft keeps the UI interactive;
+   only auth itself degrades. */
+let _auth: Auth | null = null;
+try {
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  _auth = getAuth(app);
+} catch (err) {
+  console.error("Firebase init failed — auth disabled, app stays interactive", err);
+}
 
-export const auth: Auth = getAuth(app);
+export const auth = _auth as Auth;
 export const googleProvider = new GoogleAuthProvider();

@@ -66,7 +66,9 @@ export function Comparison() {
         <div className="grid lg:grid-cols-[1fr_1fr] gap-10 lg:gap-20 items-center">
           {/* LEFT — phone mockup with the iMessage thread.
               On mobile we want the title first, so the phone goes order-2 there. */}
-          <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[380px] order-2 lg:order-1">
+          {/* Left-aligned from lg up: centred in its column the phone floats
+              inland and the whole section reads narrower than its neighbours. */}
+          <div className="relative mx-auto lg:mx-0 w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[380px] order-2 lg:order-1">
             {/* Phone silhouette */}
             <div
               className="relative rounded-[44px] p-[3px]"
@@ -292,51 +294,9 @@ export function Comparison() {
               Same girl, same profile — <span className="text-text not-italic">{pair.scenario}</span>.
             </p>
 
-            {/* Scenario steps — desktop only (mobile shows below phone) */}
-            <div className="hidden lg:flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                {PAIRS.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setIdx(i)}
-                    className={cn(
-                      "transition-all rounded-full",
-                      i === idx
-                        ? "w-12 h-1.5 bg-flame"
-                        : "w-1.5 h-1.5 bg-white/15 hover:bg-white/40"
-                    )}
-                    aria-label={`Scenario ${i + 1}`}
-                  />
-                ))}
-              </div>
-              <span className="font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
-                {idx + 1} of {PAIRS.length}
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Mobile-only pagination dots — under the phone, centered */}
-        <div className="lg:hidden flex items-center justify-center gap-3 mt-8">
-          <div className="flex items-center gap-2">
-            {PAIRS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                className={cn(
-                  "transition-all rounded-full",
-                  i === idx
-                    ? "w-12 h-1.5 bg-flame"
-                    : "w-1.5 h-1.5 bg-white/15 hover:bg-white/40"
-                )}
-                aria-label={`Scenario ${i + 1}`}
-              />
-            ))}
-          </div>
-          <span className="font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
-            {idx + 1} of {PAIRS.length}
-          </span>
-        </div>
       </div>
     </section>
   );

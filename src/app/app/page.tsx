@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { UploadZone } from "@/components/app/UploadZone";
+import { ToolLinks } from "@/components/app/ToolLinks";
 import { ProfileAnalysis } from "@/components/app/ProfileAnalysis";
 import { StylePicker } from "@/components/app/StylePicker";
 import { MessageList } from "@/components/app/MessageList";
@@ -87,6 +88,14 @@ function AnalyzingSkeleton() {
 }
 
 export default function AppPage() {
+  return (
+    <Suspense fallback={null}>
+      <AppWorkspace />
+    </Suspense>
+  );
+}
+
+function AppWorkspace() {
   const {
     step,
     analysis,
@@ -117,10 +126,6 @@ export default function AppPage() {
     activeMatchId,
     credits,
     paywallOpen,
-    startDemo,
-    isDemo,
-    demoGateOpen,
-    closeDemoGate,
   } = useAppFlow();
   const router = useRouter();
 
@@ -134,6 +139,10 @@ export default function AppPage() {
     if (id === selectedMatchId) setSelectedMatchId(null);
     if (id === activeMatchId) handleReset();
   };
+
+  /* Files picked but not yet submitted — the CTA below the drop zone stays on
+     screen and disabled until there's at least one. */
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   /* selectedMatchId: null = live workspace, otherwise read-only viewer. */
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
@@ -169,18 +178,6 @@ export default function AppPage() {
   /* After a payment round-trip (/checkout/success → /app?resumed=1), restore the
      match the user was working on so they land back where they left off — not on
      a blank upload. Runs once, after the match list has loaded. */
-  /* Track 3 — "try a sample" demo. /app?demo=1 seeds a bundled read with no
-     upload, no signup, no hint, no paywall. Runs once at mount. */
-  const demoRef = useRef(false);
-  useEffect(() => {
-    if (demoRef.current || typeof window === "undefined") return;
-    if (new URLSearchParams(window.location.search).get("demo") !== "1") return;
-    demoRef.current = true;
-    startDemo();
-    setSelectedMatchId(null);
-    setMobileView("detail");
-    window.history.replaceState(null, "", "/app");
-  }, [startDemo]);
 
   const resumedRef = useRef(false);
   useEffect(() => {
@@ -443,6 +440,7 @@ export default function AppPage() {
                 startNewMatch();
                 setMobileView("detail");
               }}
+              onNavigate={() => setMobileView("detail")}
               isMobile
             />
           </div>
@@ -451,7 +449,9 @@ export default function AppPage() {
         {/* Workspace / detail — hidden on mobile when in list mode */}
         <main
           className={cn(
-            "flex-1 px-5 sm:px-8 py-6 sm:py-10 flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden custom-scroll",
+            /* Identical to ToolShell's main — the three tools must not start
+               their headline at three different heights. */
+            "flex-1 px-5 sm:px-8 py-5 flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden custom-scroll",
             isAuthed && mobileView === "list" && "hidden lg:flex",
           )}
         >
@@ -464,31 +464,91 @@ export default function AppPage() {
           ) : (
             <>
               {step === "upload" && (
+                /* Same shape as /decode and /optimize: headline, one labelled
+                   field that absorbs the height, one CTA that is always on
+                   screen and simply disabled until there's something to send. */
                 <div
                   key="upload"
-                  className="w-full flex-1 flex flex-col animate-fade-up"
+                  className="w-full flex-1 min-h-0 flex flex-col space-y-3 animate-fade-up"
                 >
-                  <UploadZone
-                    onFilesSelected={handleUpload}
-                    isAnalyzing={isLoading}
-                  />
-                  {/* Track 4 tools — decode a reply / rate your own profile. */}
-                  <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-                    <Link
-                      href="/decode"
-                      className="font-display italic text-[13px] text-text-muted hover:text-flame transition-colors"
+                  <div>
+                    <h1
+                      className="font-display tracking-[-0.03em] leading-[1] text-[clamp(1.6rem,4vw,2.25rem)] mb-2"
+                      style={{ fontWeight: 400 }}
+                    >
+                      Read her{" "}
+                      <span
+                        className="italic"
+                        style={{
+                          background: "linear-gradient(95deg, #FE3C72, #FF8552)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                          fontWeight: 300,
+                        }}
+                      >
+                        profile.
+                      </span>
+                    </h1>
+                    <p
+                      className="font-display italic text-[15px] text-text-secondary leading-[1.5]"
                       style={{ fontWeight: 300 }}
                     >
-                      decode her reply →
-                    </Link>
-                    <Link
-                      href="/optimize"
-                      className="font-display italic text-[13px] text-text-muted hover:text-flame transition-colors"
+                      Drop her screenshots — openers written for that exact
+                      person.{" "}
+                      <span className="text-text-muted/70">Uses 1 hint.</span>
+                    </p>
+                    <ul
+                      className="mt-2 space-y-1 font-display italic text-[12.5px] text-text-muted leading-[1.4] [@media(max-height:720px)]:hidden"
                       style={{ fontWeight: 300 }}
                     >
-                      rate my profile →
-                    </Link>
+                      {[
+                        "bio screenshot, photos, prompts — grab it all",
+                        "if you have her replies already, include those too",
+                      ].map((h) => (
+                        <li key={h}>
+                          <span className="text-flame not-italic mr-1.5">·</span>
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
+
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <span
+                      className="block font-display italic text-[10.5px] tracking-[0.14em] uppercase text-text-muted/70 mb-2"
+                      style={{ fontWeight: 400 }}
+                    >
+                      her profile screenshots
+                    </span>
+                    <UploadZone
+                      onFilesSelected={handleUpload}
+                      onFilesChange={setPendingFiles}
+                      isAnalyzing={isLoading}
+                      hideHeadline
+                      compact
+                      hideSubmit
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => handleUpload(pendingFiles)}
+                    disabled={isLoading || pendingFiles.length === 0}
+                    className="w-full py-3.5 rounded-full font-display italic text-white text-[15px] transition-all disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:scale-[1.01] enabled:active:scale-[0.99]"
+                    style={{
+                      background:
+                        "linear-gradient(95deg, #FE3C72, #FF6B6B 50%, #FF8552)",
+                      fontWeight: 400,
+                    }}
+                  >
+                    {isLoading
+                      ? "reading her profile…"
+                      : pendingFiles.length === 0
+                        ? "add her screenshots first"
+                        : `read her profile · ${pendingFiles.length} photo${pendingFiles.length > 1 ? "s" : ""}`}
+                  </button>
+
+                  <ToolLinks current="read" />
                 </div>
               )}
 
@@ -567,77 +627,6 @@ export default function AppPage() {
       {false && <ArrowLeft />}
 
       {/* Demo (Track 3): a subtle ribbon while viewing the sample profile. */}
-      {isDemo && !demoGateOpen && (
-        <div className="fixed inset-x-0 bottom-0 z-[55] flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none">
-          <div
-            className="pointer-events-auto flex items-center gap-3 rounded-full pl-4 pr-2 py-2"
-            style={{
-              background: "linear-gradient(180deg, rgba(25,20,30,0.98), rgba(15,12,20,0.98))",
-              border: "1px solid rgba(255,255,255,0.10)",
-              boxShadow: "0 16px 40px -18px rgba(0,0,0,0.7)",
-            }}
-          >
-            <span
-              className="font-display italic text-[12.5px] text-text-secondary"
-              style={{ fontWeight: 300 }}
-            >
-              you&apos;re viewing a sample profile
-            </span>
-            <button
-              onClick={() => router.push("/signin?next=/app")}
-              className="rounded-full px-3.5 py-1.5 font-display italic text-white text-[12.5px] transition-transform hover:scale-[1.03] active:scale-95"
-              style={{
-                background: "linear-gradient(95deg, #FE3C72, #FF8552)",
-                fontWeight: 400,
-              }}
-            >
-              run it on yours →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Demo gate — any hint-costing action asks for a free sign-up. */}
-      {demoGateOpen && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center px-5 bg-black/70 backdrop-blur-sm"
-          onClick={closeDemoGate}
-        >
-          <div
-            className="w-full max-w-sm rounded-2xl p-6 text-center animate-fade-up"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "linear-gradient(180deg, rgba(25,20,30,0.98), rgba(15,12,20,0.98))",
-              border: "1px solid rgba(255,255,255,0.10)",
-              boxShadow: "0 30px 60px -20px rgba(0,0,0,0.8)",
-            }}
-          >
-            <div className="font-display text-[18px] text-text mb-2" style={{ fontWeight: 500 }}>
-              Like what you see?
-            </div>
-            <p
-              className="font-display italic text-[13.5px] text-text-secondary leading-[1.5] mb-5"
-              style={{ fontWeight: 300 }}
-            >
-              Sign up free and run it on YOUR match — the first 3 reads are on us.
-            </p>
-            <button
-              onClick={() => router.push("/signin?next=/app")}
-              className="w-full py-3 rounded-xl font-display italic text-white text-[14px] transition-transform hover:scale-[1.01] active:scale-[0.99]"
-              style={{ background: "linear-gradient(95deg, #FE3C72, #FF8552)", fontWeight: 400 }}
-            >
-              start free
-            </button>
-            <button
-              onClick={closeDemoGate}
-              className="mt-2 w-full py-2 font-display italic text-[12.5px] text-text-muted hover:text-text transition-colors"
-              style={{ fontWeight: 300 }}
-            >
-              keep looking at the demo
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

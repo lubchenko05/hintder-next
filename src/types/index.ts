@@ -121,6 +121,10 @@ export interface DecodeResult {
   losingInterest: boolean;
   move: string;
   avoid: string;
+  /** Lines he can send as-is — the thing he actually came for. */
+  replies: string[];
+  /** When to send it. Half the answer for a thread that's cooling. */
+  timing: string;
 }
 
 /** Track 4 — feedback on one of the user's OWN profile photos. */

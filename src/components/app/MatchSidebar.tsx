@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type {
   MatchHistoryEntry,
@@ -29,6 +30,10 @@ interface MatchSidebarProps {
   ) => void;
   /** Permanently delete a match from the archive. */
   onDeleteMatch?: (id: string) => void;
+  /** Fires when a tool link is tapped. The mobile list has to close even when
+      the tap targets the route you're already on — a pathname effect alone
+      never fires there, so the list would sit on top of the page. */
+  onNavigate?: () => void;
 }
 
 /* A match is "quiet" (worth a nudge) when it's still open, the thread has
@@ -51,14 +56,16 @@ export function MatchSidebar({
   isMobile,
   onUpdateMatchSettings,
   onDeleteMatch,
+  onNavigate,
 }: MatchSidebarProps) {
   /* On mobile the sidebar IS the list view — user has to drill in to see
      a match, so highlighting one as "active" is confusing. */
   const effectiveActiveId = isMobile ? null : activeId;
   return (
     <div className="flex flex-col h-full">
-      {/* Header — new match action */}
-      <div className="px-5 sm:px-6 pt-5 pb-3">
+      {/* Header — the launcher. There are three tools now, so "new match" was
+          only naming one of them. */}
+      <div className="px-5 sm:px-6 pt-5 pb-3 space-y-2">
         <button
           onClick={onNewMatch}
           className="w-full inline-flex items-center justify-between gap-3 px-4 py-3 rounded-full font-display italic text-white text-[14px] transition-transform hover:scale-[1.01] active:scale-[0.99]"
@@ -69,7 +76,7 @@ export function MatchSidebar({
             fontWeight: 400,
           }}
         >
-          new match
+          read her profile
           <svg
             width="13"
             height="13"
@@ -82,6 +89,30 @@ export function MatchSidebar({
             <path d="M12 5v14M5 12h14" />
           </svg>
         </button>
+
+        {/* Smaller than the primary on purpose — but the same colour family,
+            not a grey outline that reads as a different kind of control. */}
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { href: "/decode", label: "decode her reply" },
+            { href: "/optimize", label: "rate your profile" },
+          ].map((t) => (
+            <Link
+              key={t.href}
+              href={t.href}
+              onClick={onNavigate}
+              className="inline-flex items-center justify-center px-3 py-2 rounded-full font-display italic text-[12.5px] text-center transition-colors"
+              style={{
+                fontWeight: 400,
+                color: "var(--color-flame)",
+                background: "rgba(254,60,114,0.10)",
+                border: "1px solid rgba(254,60,114,0.28)",
+              }}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Eyebrow */}

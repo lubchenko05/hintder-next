@@ -23,7 +23,6 @@ import {
   analyzeReply,
   regenerateMessage,
 } from "@/lib/ai";
-import { DEMO_ANALYSIS, DEMO_MESSAGES } from "@/lib/demoRead";
 import { useCredits } from "./useCredits";
 import { useMatches } from "./useMatches";
 
@@ -37,21 +36,6 @@ export function useAppFlow() {
   const [conversation, setConversation] = useState<ConversationTurn[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
-  /* Demo mode (Track 3): a bundled sample read, no upload/hint/backend. Any
-     action that would cost a hint opens a sign-up gate instead of the paywall. */
-  const [isDemo, setIsDemo] = useState(false);
-  const [demoGateOpen, setDemoGateOpen] = useState(false);
-  const closeDemoGate = useCallback(() => setDemoGateOpen(false), []);
-  const startDemo = useCallback(() => {
-    setIsDemo(true);
-    setAnalysis(DEMO_ANALYSIS);
-    setMessages(DEMO_MESSAGES);
-    setUploadedImages([]);
-    setConversation([]);
-    setFollowUp(null);
-    setActiveMatchId(null);
-    setStep("messages");
-  }, []);
   /* The actual uploaded screenshots (data-URLs) for the live session — shown
      in the photo report. Past matches don't keep these (privacy). */
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -244,10 +228,6 @@ export function useAppFlow() {
   const handleGenerate = useCallback(
     async (style: MessageStyle, tone: MessageTone) => {
       if (!analysis) return;
-      if (isDemo) {
-        setDemoGateOpen(true);
-        return;
-      }
       if (!credits.hasCredits) {
         setPaywallOpen(true);
         return;
@@ -283,15 +263,11 @@ export function useAppFlow() {
         setIsLoading(false);
       }
     },
-    [analysis, isDemo, credits, activeMatchId, conversation, followUp, upsertMatch, cacheMerge]
+    [analysis, credits, activeMatchId, conversation, followUp, upsertMatch, cacheMerge]
   );
 
   const handleRegenerate = useCallback(async () => {
     if (!analysis) return;
-    if (isDemo) {
-      setDemoGateOpen(true);
-      return;
-    }
     if (!credits.hasCredits) {
       setPaywallOpen(true);
       return;
@@ -305,14 +281,10 @@ export function useAppFlow() {
     } finally {
       setIsLoading(false);
     }
-  }, [analysis, isDemo, currentStyle, currentTone, credits, activeMatchId, cacheMerge]);
+  }, [analysis, currentStyle, currentTone, credits, activeMatchId, cacheMerge]);
 
   const handleTweak = useCallback(
     async (message: GeneratedMessage, instruction: string) => {
-      if (isDemo) {
-        setDemoGateOpen(true);
-        return;
-      }
       if (!credits.hasCredits) {
         setPaywallOpen(true);
         return;
@@ -343,7 +315,7 @@ export function useAppFlow() {
         };
       });
     },
-    [isDemo, credits, activeMatchId, cacheMerge]
+    [credits, activeMatchId, cacheMerge]
   );
 
   const handleFollowUp = useCallback(() => {
@@ -357,10 +329,6 @@ export function useAppFlow() {
      into the follow-up step waiting for her reply. */
   const handlePickOpener = useCallback(
     (message: GeneratedMessage) => {
-      if (isDemo) {
-        setDemoGateOpen(true);
-        return;
-      }
       const meTurn: ConversationTurn = {
         id: turnId(),
         role: "me",
@@ -375,7 +343,7 @@ export function useAppFlow() {
       persistMatch(next, "in_progress", null);
       cacheMerge(activeMatchId, { followUp: null });
     },
-    [isDemo, persistMatch, cacheMerge, activeMatchId],
+    [persistMatch, cacheMerge, activeMatchId],
   );
 
   const handleSubmitReply = useCallback(
@@ -524,8 +492,6 @@ export function useAppFlow() {
     setActiveMatch(null);
     setUploadedImages([]);
     setIsLoading(false);
-    setIsDemo(false);
-    setDemoGateOpen(false);
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(RESUME_MATCH_KEY);
     }
@@ -610,10 +576,5 @@ export function useAppFlow() {
     isAnonymous: credits.isAnonymous,
     paywallOpen,
     closePaywall,
-    /* Demo (Track 3) */
-    startDemo,
-    isDemo,
-    demoGateOpen,
-    closeDemoGate,
   };
 }

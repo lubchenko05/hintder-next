@@ -1,12 +1,27 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useId } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UploadZoneProps {
   onFilesSelected: (files: File[]) => void;
   isAnalyzing: boolean;
+  /** Headline override — the part before the gradient span. */
+  title?: string;
+  /** Headline override — the gradient-accented tail. */
+  titleAccent?: string;
+  /** Bullet hints under the headline. */
+  hints?: string[];
+  /** Hide the headline block entirely (when the page supplies its own). */
+  hideHeadline?: boolean;
+  /** Shorter drop area, so a tool page fits on one screen. */
+  compact?: boolean;
+  /** Hide the built-in submit button — the page renders its own (so it can sit
+   *  below other fields and stay visible-but-disabled). */
+  hideSubmit?: boolean;
+  /** Fires whenever the picked files change, so the page can drive its own CTA. */
+  onFilesChange?: (files: File[]) => void;
 }
 
 /* Rotation presets for stacked-photo effect */
@@ -18,11 +33,28 @@ const PHOTO_TRANSFORMS = [
   { rotate: "-1deg", x: "-3px", y: "4px" },
 ] as const;
 
-export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
+const DEFAULT_HINTS = [
+  "bio screenshot, photos, prompts — grab it all",
+  "if you have her replies already, include those too",
+  "the more she shows, the sharper the line",
+];
+
+export function UploadZone({
+  onFilesSelected,
+  isAnalyzing,
+  title = "Drop her profile",
+  titleAccent = "into the scanner.",
+  hints = DEFAULT_HINTS,
+  hideHeadline = false,
+  compact = false,
+  hideSubmit = false,
+  onFilesChange,
+}: UploadZoneProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   const addFiles = useCallback(
     (newFiles: FileList | File[]) => {
@@ -32,6 +64,7 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
       if (fileArray.length === 0) return;
       const updated = [...files, ...fileArray].slice(0, 5);
       setFiles(updated);
+      onFilesChange?.(updated);
       fileArray.forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -42,11 +75,15 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
         reader.readAsDataURL(file);
       });
     },
-    [files],
+    [files, onFilesChange],
   );
 
   const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      onFilesChange?.(next);
+      return next;
+    });
     setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -63,50 +100,48 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
 
   return (
     <div className="w-full flex-1 flex flex-col items-stretch gap-6 sm:gap-8">
-      {/* ═══ Hints — ALWAYS at the top ═══ */}
-      <div className="text-left animate-fade-up">
-        <h1
-          className="font-display tracking-[-0.02em] leading-[1.05] text-[clamp(1.5rem,5vw,2.25rem)]"
-          style={{ fontWeight: 400, textWrap: "balance" }}
-        >
-          Drop her profile{" "}
-          <span
-            className="italic"
-            style={{
-              background: "linear-gradient(95deg, #FE3C72, #FF8552)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-              fontWeight: 300,
-            }}
+      {/* ═══ Hints — ALWAYS at the top (unless the page owns the headline) ═══ */}
+      {!hideHeadline && (
+        <div className="text-left animate-fade-up">
+          <h1
+            className="font-display tracking-[-0.02em] leading-[1.05] text-[clamp(1.5rem,5vw,2.25rem)]"
+            style={{ fontWeight: 400, textWrap: "balance" }}
           >
-            into the scanner.
-          </span>
-        </h1>
+            {title}{" "}
+            <span
+              className="italic"
+              style={{
+                background: "linear-gradient(95deg, #FE3C72, #FF8552)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                fontWeight: 300,
+              }}
+            >
+              {titleAccent}
+            </span>
+          </h1>
 
-        <ul
-          className="mt-4 space-y-1.5 font-display italic text-[13px] text-text-muted leading-[1.5]"
-          style={{ fontWeight: 300 }}
-        >
-          <li>
-            <span className="text-flame not-italic mr-1.5">·</span>
-            bio screenshot, photos, prompts — grab it all
-          </li>
-          <li>
-            <span className="text-flame not-italic mr-1.5">·</span>
-            if you have her replies already, include those too
-          </li>
-          <li>
-            <span className="text-flame not-italic mr-1.5">·</span>
-            the more she shows, the sharper the line
-          </li>
-        </ul>
-      </div>
+          <ul
+            className="mt-4 space-y-1.5 font-display italic text-[13px] text-text-muted leading-[1.5]"
+            style={{ fontWeight: 300 }}
+          >
+            {hints.map((h) => (
+              <li key={h}>
+                <span className="text-flame not-italic mr-1.5">·</span>
+                {h}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* ═══ Drop zone — tap to upload, NOT phone-shaped ═══ */}
-      <div
-        role="button"
-        tabIndex={isAnalyzing ? -1 : 0}
+      {/* A real <label for> — the browser opens the file picker natively, so it
+          works even before React hydrates (a programmatic input.click() does
+          not). */}
+      <label
+        htmlFor={inputId}
         aria-disabled={isAnalyzing}
         onDragOver={(e) => {
           e.preventDefault();
@@ -114,14 +149,8 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => !isAnalyzing && inputRef.current?.click()}
-        onKeyDown={(e) => {
-          if ((e.key === "Enter" || e.key === " ") && !isAnalyzing) {
-            e.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
         className={cn(
+          "cursor-pointer",
           "group relative w-full rounded-3xl overflow-hidden flex-1",
           "transition-all duration-300 ease-out",
           "border-2 border-dashed",
@@ -131,9 +160,14 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
             ? "border-flame bg-flame/[0.06] scale-[1.005]"
             : "border-white/15 bg-white/[0.015] hover:border-white/30 hover:bg-white/[0.03]",
           isAnalyzing && "pointer-events-none opacity-70",
-          hasFiles
-            ? "min-h-[360px] sm:min-h-[420px] py-6"
-            : "min-h-[460px] sm:min-h-[560px] py-12",
+          /* Heights are viewport-relative so the whole page (headline + zone +
+             tool links) always fits one screen, on any display. */
+          /* Compact mode stretches: the page gives it a flex column and the
+             zone eats whatever height is left over, down to a floor that
+             still fits a short laptop. */
+          compact
+            ? "min-h-[150px] py-4"
+            : "min-h-[clamp(200px,34vh,380px)] py-6",
         )}
         style={{
           boxShadow: isDragging
@@ -143,11 +177,17 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
       >
         {!hasFiles ? (
           /* Empty state — obvious tap-to-upload */
-          <div className="relative flex flex-col items-center justify-center gap-5 px-6">
+          <div
+            className={cn(
+              "relative flex flex-col items-center justify-center px-6",
+              compact ? "gap-3" : "gap-5",
+            )}
+          >
             {/* Big plus icon */}
             <div
               className={cn(
-                "relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300",
+                "relative rounded-full flex items-center justify-center transition-all duration-300",
+                compact ? "w-14 h-14" : "w-20 h-20",
                 isDragging
                   ? "bg-flame/15 ring-2 ring-flame"
                   : "bg-white/[0.04] ring-1 ring-white/15 group-hover:ring-flame/40 group-hover:bg-flame/8",
@@ -156,7 +196,8 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
               <svg
                 viewBox="0 0 24 24"
                 className={cn(
-                  "w-9 h-9 transition-colors",
+                  "transition-colors",
+                  compact ? "w-7 h-7" : "w-9 h-9",
                   isDragging ? "text-flame" : "text-text-muted group-hover:text-flame",
                 )}
                 fill="none"
@@ -169,10 +210,11 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
             </div>
 
             {/* Tap to upload text */}
-            <div className="text-center space-y-2">
+            <div className={cn("text-center", compact ? "space-y-1" : "space-y-2")}>
               <div
                 className={cn(
-                  "font-display text-[18px] sm:text-[20px] tracking-tight transition-colors",
+                  "font-display tracking-tight transition-colors",
+                  compact ? "text-[16px] sm:text-[17px]" : "text-[18px] sm:text-[20px]",
                   isDragging ? "text-flame" : "text-text",
                 )}
                 style={{ fontWeight: 500 }}
@@ -273,16 +315,18 @@ export function UploadZone({ onFilesSelected, isAnalyzing }: UploadZoneProps) {
 
         <input
           ref={inputRef}
+          id={inputId}
           type="file"
           accept="image/*"
           multiple
-          className="hidden"
+          className="sr-only"
+          disabled={isAnalyzing}
           onChange={(e) => e.target.files && addFiles(e.target.files)}
         />
-      </div>
+      </label>
 
       {/* ═══ Analyze button — appears when files are added ═══ */}
-      {hasFiles && (
+      {hasFiles && !hideSubmit && (
         <button
           onClick={() => onFilesSelected(files)}
           disabled={isAnalyzing}

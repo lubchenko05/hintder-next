@@ -82,11 +82,6 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable} ${mono.variable} dark`}
     >
       <body className="min-h-dvh flex flex-col font-sans antialiased">
-        {/* Capture the PWA install event as early as possible — it can fire
-            before React mounts, so stash it on window and notify the provider. */}
-        <Script id="pwa-install-capture" strategy="beforeInteractive">
-          {`(function(){window.__hintderBIP=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__hintderBIP=e;window.dispatchEvent(new Event('hintder:bip'));});window.addEventListener('appinstalled',function(){window.__hintderBIP=null;window.dispatchEvent(new Event('hintder:installed'));});})();`}
-        </Script>
         <Providers>{children}</Providers>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
