@@ -2,10 +2,12 @@
 
 import { clearToken, getDeviceId, getToken } from "@/lib/auth-token";
 import type {
+  DecodeResult,
   FollowUpAnalysis,
   GeneratedMessage,
   MatchHistoryEntry,
   ProfileAnalysis,
+  ProfileOptimizeResult,
 } from "@/types";
 
 /* ─────────────────────────────────────────────
@@ -205,6 +207,22 @@ export const readsApi = {
     apiFetch<GeneratedMessage>("/reads/tweak", {
       method: "POST",
       body: { message_text: messageText, instruction, tone },
+    }),
+  /** Track 4 — decode one message from her (meaning + the move). */
+  decode: (
+    herMessage: string,
+    images: string[] = [],
+    analysis?: ProfileAnalysis | null,
+  ) =>
+    apiFetch<DecodeResult>("/reads/decode", {
+      method: "POST",
+      body: { her_message: herMessage, images, analysis: analysis ?? null },
+    }),
+  /** Track 4 — review the user's OWN profile (score + bio + photo feedback). */
+  optimize: (images: string[], bio?: string | null) =>
+    apiFetch<ProfileOptimizeResult>("/reads/optimize", {
+      method: "POST",
+      body: { images, bio: bio ?? null },
     }),
   /** Exchange a saved match's gs:// screenshot URIs for short-lived view URLs. */
   signImages: (uris: string[]) =>

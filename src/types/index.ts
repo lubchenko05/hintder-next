@@ -72,6 +72,9 @@ export interface ProfileAnalysis {
   timingWindow?: string;
   /** A short list of conversation topics that should land. */
   greenLightTopics?: string[];
+  /** Dense free-text read of everything the model saw — carried forward as the
+      context for openers/replies (so screenshots are never re-sent). */
+  detailedRead?: string;
   /** One free opener per voice × risk — the StylePicker preview matrix. */
   previews?: PreviewOpener[];
   /** gs:// URIs of the uploaded screenshots (kept 30 days). Not directly
@@ -86,6 +89,8 @@ export interface GeneratedMessage {
   label: string;
   cringeRisk: number; // 0-100
   tone: string;
+  /** Coach line — one short "why this lands", revealed on demand. */
+  whyItWorks?: string;
 }
 
 export interface FollowUpAnalysis {
@@ -106,6 +111,36 @@ export interface FollowUpAnalysis {
   dateInvites?: GeneratedMessage[];
   /** When readiness >= 90, a short warning that the window is closing. */
   urgencyWarning?: string;
+}
+
+/** Track 4 — a decode of one message from her. */
+export interface DecodeResult {
+  meaning: string;
+  interestLevel: "high" | "medium" | "low" | "unclear";
+  mood: string;
+  losingInterest: boolean;
+  move: string;
+  avoid: string;
+  /** Lines he can send as-is — the thing he actually came for. */
+  replies: string[];
+  /** When to send it. Half the answer for a thread that's cooling. */
+  timing: string;
+}
+
+/** Track 4 — feedback on one of the user's OWN profile photos. */
+export interface PhotoFeedback {
+  slot: number;
+  verdict: "keep" | "lead" | "cut" | "move";
+  note: string;
+}
+
+/** Track 4 — a review of the user's OWN dating profile. */
+export interface ProfileOptimizeResult {
+  score: number;
+  firstImpression: string;
+  bioRewrites: string[];
+  photoFeedback: PhotoFeedback[];
+  topFixes: string[];
 }
 
 export interface ConversationTurn {

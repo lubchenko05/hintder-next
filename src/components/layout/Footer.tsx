@@ -1,15 +1,21 @@
 import Link from "next/link";
 import { Mark } from "@/components/brand/Mark";
 import BadgeRotator from "@/components/layout/BadgeRotator";
+import { TOOLS } from "@/lib/tools";
+import { getAllPosts } from "@/lib/content";
 
-const footerLinks = [
-  { label: "Guides", href: "/guides" },
-  { label: "Stories", href: "/stories" },
+/* Everything that isn't a tool or an article: the pages people look for by
+   name rather than browse. */
+const docLinks = [
   { label: "Pricing", href: "/pricing" },
   { label: "Privacy", href: "/privacy" },
   { label: "Terms", href: "/terms" },
   { label: "Refund", href: "/refund" },
 ] as const;
+
+/* Newest few per section — enough for a crawler to find the hub and for a
+   reader to see what's in there, without turning the footer into a sitemap. */
+const FOOTER_POSTS = 4;
 
 const featuredBadges = [
   {
@@ -232,10 +238,15 @@ const featuredBadges = [
 ] as const;
 
 export function Footer() {
+  /* Server component — the posts are markdown in the repo, so this costs a
+     read at build time and nothing at runtime. */
+  const guides = safePosts("guides");
+  const stories = safePosts("stories");
+
   return (
-    <footer className="border-t border-white/[0.04]">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 py-12">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-8">
+    <footer>
+      <div className="w-full px-5 sm:px-10 lg:px-16 py-14">
+        <div className="flex flex-col lg:flex-row lg:justify-between gap-10 lg:gap-20">
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
               <Mark size={20} />
@@ -255,29 +266,107 @@ export function Footer() {
             </a>
           </div>
 
-          <nav aria-label="Footer" className="flex flex-wrap gap-x-7 gap-y-3">
-            {footerLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-[14px] font-display italic text-text-muted hover:text-flame transition-colors"
-                style={{ fontWeight: 300 }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-10 xl:gap-x-20 gap-y-10 lg:flex-1">
+            <FooterColumn title="Tools" allHref="/tools" allLabel="See all tools">
+              {TOOLS.map((tool) => (
+                <FooterLink key={tool.slug} href={`/tools/${tool.slug}`}>
+                  {tool.name}
+                </FooterLink>
+              ))}
+            </FooterColumn>
+
+            <FooterColumn title="Guides" allHref="/guides" allLabel="See all guides">
+              {guides.map((p) => (
+                <FooterLink key={p.slug} href={`/guides/${p.slug}`}>
+                  {p.title}
+                </FooterLink>
+              ))}
+            </FooterColumn>
+
+            <FooterColumn title="Stories" allHref="/stories" allLabel="See all stories">
+              {stories.map((p) => (
+                <FooterLink key={p.slug} href={`/stories/${p.slug}`}>
+                  {p.title}
+                </FooterLink>
+              ))}
+            </FooterColumn>
+
+            <FooterColumn title="More">
+              {docLinks.map((l) => (
+                <FooterLink key={l.href} href={l.href}>
+                  {l.label}
+                </FooterLink>
+              ))}
+            </FooterColumn>
+          </div>
         </div>
 
         {/* Featured-on backlink badges — rotated through one compact slot so
             they keep their crawlable links without dominating the footer. */}
         <BadgeRotator badges={featuredBadges} />
 
-        <div className="mt-6 pt-6 border-t border-white/[0.04] flex items-center justify-between font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
+        <div className="mt-10 flex items-center justify-between font-display italic text-[12px] text-text-muted" style={{ fontWeight: 300 }}>
           <span>© {new Date().getFullYear()} hintder</span>
           <span>made for the brave</span>
         </div>
       </div>
     </footer>
+  );
+}
+
+function safePosts(kind: "guides" | "stories") {
+  try {
+    return getAllPosts(kind).slice(0, FOOTER_POSTS);
+  } catch (err) {
+    /* A missing content dir must never take the whole footer down. */
+    console.error(`footer: failed to list ${kind}`, err);
+    return [];
+  }
+}
+
+function FooterColumn({
+  title,
+  allHref,
+  allLabel,
+  children,
+}: {
+  title: string;
+  allHref?: string;
+  allLabel?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <nav aria-label={title}>
+      <div
+        className="font-display italic text-[11px] tracking-[0.16em] uppercase text-flame mb-3"
+        style={{ fontWeight: 400 }}
+      >
+        {title}
+      </div>
+      <ul className="space-y-2">{children}</ul>
+      {allHref && (
+        <Link
+          href={allHref}
+          className="mt-3 inline-block font-display italic text-[13.5px] text-text-secondary hover:text-flame transition-colors"
+          style={{ fontWeight: 400 }}
+        >
+          {allLabel} →
+        </Link>
+      )}
+    </nav>
+  );
+}
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="font-display italic text-[13.5px] text-text-muted hover:text-flame transition-colors leading-[1.4] line-clamp-2"
+        style={{ fontWeight: 300 }}
+      >
+        {children}
+      </Link>
+    </li>
   );
 }

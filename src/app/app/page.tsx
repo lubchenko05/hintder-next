@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { UploadZone } from "@/components/app/UploadZone";
+import { ToolLinks } from "@/components/app/ToolLinks";
 import { ProfileAnalysis } from "@/components/app/ProfileAnalysis";
 import { StylePicker } from "@/components/app/StylePicker";
 import { MessageList } from "@/components/app/MessageList";
@@ -87,6 +88,14 @@ function AnalyzingSkeleton() {
 }
 
 export default function AppPage() {
+  return (
+    <Suspense fallback={null}>
+      <AppWorkspace />
+    </Suspense>
+  );
+}
+
+function AppWorkspace() {
   const {
     step,
     analysis,
@@ -131,6 +140,10 @@ export default function AppPage() {
     if (id === activeMatchId) handleReset();
   };
 
+  /* Files picked but not yet submitted — the CTA below the drop zone stays on
+     screen and disabled until there's at least one. */
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
   /* selectedMatchId: null = live workspace, otherwise read-only viewer. */
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   /* Mobile: when null → show list, otherwise show workspace/viewer. */
@@ -165,6 +178,7 @@ export default function AppPage() {
   /* After a payment round-trip (/checkout/success → /app?resumed=1), restore the
      match the user was working on so they land back where they left off — not on
      a blank upload. Runs once, after the match list has loaded. */
+
   const resumedRef = useRef(false);
   useEffect(() => {
     if (resumedRef.current || typeof window === "undefined") return;
@@ -426,6 +440,7 @@ export default function AppPage() {
                 startNewMatch();
                 setMobileView("detail");
               }}
+              onNavigate={() => setMobileView("detail")}
               isMobile
             />
           </div>
@@ -434,7 +449,9 @@ export default function AppPage() {
         {/* Workspace / detail — hidden on mobile when in list mode */}
         <main
           className={cn(
-            "flex-1 px-5 sm:px-8 py-6 sm:py-10 flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden custom-scroll",
+            /* Identical to ToolShell's main — the three tools must not start
+               their headline at three different heights. */
+            "flex-1 px-5 sm:px-8 py-5 flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden custom-scroll",
             isAuthed && mobileView === "list" && "hidden lg:flex",
           )}
         >
@@ -447,14 +464,91 @@ export default function AppPage() {
           ) : (
             <>
               {step === "upload" && (
+                /* Same shape as /decode and /optimize: headline, one labelled
+                   field that absorbs the height, one CTA that is always on
+                   screen and simply disabled until there's something to send. */
                 <div
                   key="upload"
-                  className="w-full flex-1 flex flex-col animate-fade-up"
+                  className="w-full flex-1 min-h-0 flex flex-col space-y-3 animate-fade-up"
                 >
-                  <UploadZone
-                    onFilesSelected={handleUpload}
-                    isAnalyzing={isLoading}
-                  />
+                  <div>
+                    <h1
+                      className="font-display tracking-[-0.03em] leading-[1] text-[clamp(1.6rem,4vw,2.25rem)] mb-2"
+                      style={{ fontWeight: 400 }}
+                    >
+                      Read her{" "}
+                      <span
+                        className="italic"
+                        style={{
+                          background: "linear-gradient(95deg, #FE3C72, #FF8552)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                          fontWeight: 300,
+                        }}
+                      >
+                        profile.
+                      </span>
+                    </h1>
+                    <p
+                      className="font-display italic text-[15px] text-text-secondary leading-[1.5]"
+                      style={{ fontWeight: 300 }}
+                    >
+                      Drop her screenshots — openers written for that exact
+                      person.{" "}
+                      <span className="text-text-muted/70">Uses 1 hint.</span>
+                    </p>
+                    <ul
+                      className="mt-2 space-y-1 font-display italic text-[12.5px] text-text-muted leading-[1.4] [@media(max-height:720px)]:hidden"
+                      style={{ fontWeight: 300 }}
+                    >
+                      {[
+                        "bio screenshot, photos, prompts — grab it all",
+                        "if you have her replies already, include those too",
+                      ].map((h) => (
+                        <li key={h}>
+                          <span className="text-flame not-italic mr-1.5">·</span>
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <span
+                      className="block font-display italic text-[10.5px] tracking-[0.14em] uppercase text-text-muted/70 mb-2"
+                      style={{ fontWeight: 400 }}
+                    >
+                      her profile screenshots
+                    </span>
+                    <UploadZone
+                      onFilesSelected={handleUpload}
+                      onFilesChange={setPendingFiles}
+                      isAnalyzing={isLoading}
+                      hideHeadline
+                      compact
+                      hideSubmit
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => handleUpload(pendingFiles)}
+                    disabled={isLoading || pendingFiles.length === 0}
+                    className="w-full py-3.5 rounded-full font-display italic text-white text-[15px] transition-all disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:scale-[1.01] enabled:active:scale-[0.99]"
+                    style={{
+                      background:
+                        "linear-gradient(95deg, #FE3C72, #FF6B6B 50%, #FF8552)",
+                      fontWeight: 400,
+                    }}
+                  >
+                    {isLoading
+                      ? "reading her profile…"
+                      : pendingFiles.length === 0
+                        ? "add her screenshots first"
+                        : `read her profile · ${pendingFiles.length} photo${pendingFiles.length > 1 ? "s" : ""}`}
+                  </button>
+
+                  <ToolLinks current="read" />
                 </div>
               )}
 
@@ -531,6 +625,8 @@ export default function AppPage() {
 
       {/* Silence unused-var warning for ArrowLeft (used by past view variants) */}
       {false && <ArrowLeft />}
+
+      {/* Demo (Track 3): a subtle ribbon while viewing the sample profile. */}
     </div>
   );
 }
