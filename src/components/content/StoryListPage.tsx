@@ -63,6 +63,7 @@ export function StoryListPage({
                 <li key={post.slug} className="bg-bg">
                   <Link
                     href={`/stories/${post.slug}`}
+                    prefetch={false}
                     className="group block h-full p-7 sm:p-9 transition-colors hover:bg-white/[0.015]"
                   >
                     <div

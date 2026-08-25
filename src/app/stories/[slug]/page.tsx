@@ -232,6 +232,7 @@ export default async function StoryPostPage({
                   <li key={r.slug} className="bg-bg">
                     <Link
                       href={`/stories/${r.slug}`}
+                      prefetch={false}
                       className="block p-6 sm:p-7 hover:bg-white/[0.015] transition-colors"
                     >
                       <div

@@ -198,6 +198,7 @@ export default async function GuidePostPage({
                   <li key={r.slug} className="bg-bg">
                     <Link
                       href={`/guides/${r.slug}`}
+                      prefetch={false}
                       className="block p-6 sm:p-7 hover:bg-white/[0.015] transition-colors"
                     >
                       <div

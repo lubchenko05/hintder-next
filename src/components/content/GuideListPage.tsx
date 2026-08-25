@@ -63,6 +63,7 @@ export function GuideListPage({
                 <li key={post.slug} className="bg-bg">
                   <Link
                     href={`/guides/${post.slug}`}
+                    prefetch={false}
                     className="group block h-full p-7 sm:p-8 transition-colors hover:bg-white/[0.015]"
                   >
                     <div

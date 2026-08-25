@@ -360,8 +360,11 @@ function FooterColumn({
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <li>
+      {/* No speculative fetches from the footer: it sits on every page, so a
+          default-prefetching link here multiplies by the whole site. */}
       <Link
         href={href}
+        prefetch={false}
         className="font-display italic text-[13.5px] text-text-muted hover:text-flame transition-colors leading-[1.4] line-clamp-2"
         style={{ fontWeight: 300 }}
       >
