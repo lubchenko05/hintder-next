@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Mark } from "@/components/brand/Mark";
 import BadgeRotator from "@/components/layout/BadgeRotator";
 import { TOOLS } from "@/lib/tools";
-import { getAllPosts } from "@/lib/content";
+import { getRecentPosts } from "@/lib/content";
 
 /* Everything that isn't a tool or an article: the pages people look for by
    name rather than browse. */
@@ -315,7 +315,7 @@ export async function Footer() {
 
 async function safePosts(kind: "guides" | "stories") {
   try {
-    return (await getAllPosts(kind)).slice(0, FOOTER_POSTS);
+    return await getRecentPosts(kind, FOOTER_POSTS);
   } catch (err) {
     /* An unreachable API must never take the whole footer — and with it every
        page that renders one — down. */

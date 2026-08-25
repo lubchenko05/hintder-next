@@ -30,8 +30,30 @@ export function contentSource(): "api" | "fs" {
   return SOURCE;
 }
 
-export async function getAllPosts(kind: ContentKind): Promise<ContentPost[]> {
-  return SOURCE === "fs" ? fsSource.getAllPosts(kind) : api.getAllPosts(kind);
+export type { PostPage } from "@/lib/content-api";
+
+/** One page of a listing — the ONLY way to list posts. There is deliberately
+ *  no "give me everything": the collections grow by one post a day, and any
+ *  unbounded list would quietly become the slowest page on the site. */
+export async function getPostsPage(
+  kind: ContentKind,
+  page: number,
+  perPage: number,
+): Promise<{ posts: ContentPost[]; hasMore: boolean }> {
+  if (SOURCE === "fs") {
+    const all = await fsSource.getAllPosts(kind);
+    const offset = (page - 1) * perPage;
+    return { posts: all.slice(offset, offset + perPage), hasMore: all.length > offset + perPage };
+  }
+  return api.getPostsPage(kind, page, perPage);
+}
+
+/** The newest few, for the footer column. */
+export async function getRecentPosts(kind: ContentKind, n: number): Promise<ContentPost[]> {
+  if (SOURCE === "fs") {
+    return (await fsSource.getAllPosts(kind)).slice(0, n);
+  }
+  return api.getRecentPosts(kind, n);
 }
 
 export async function getAllSlugs(kind: ContentKind): Promise<string[]> {
@@ -54,7 +76,7 @@ export async function getRelatedPosts(
   limit = 3,
 ): Promise<ContentPost[]> {
   if (SOURCE === "fs") {
-    const all = await fsSource.getAllPosts(kind);
+    const all = fsSource.getAllPosts(kind);
     const current = all.find((p) => p.slug === slug);
     return fsSource.getRelatedPosts(kind, slug, current?.category ?? "", limit);
   }

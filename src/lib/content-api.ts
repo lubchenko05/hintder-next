@@ -74,8 +74,35 @@ function toPost(row: ApiPost): ContentPost {
   };
 }
 
-export async function getAllPosts(kind: ContentKind): Promise<ContentPost[]> {
-  const rows = await get<ApiPost[]>(`/posts?kind=${kind}&limit=200`, ["content", `content:${kind}`], TTL_LIST);
+export interface PostPage {
+  posts: ContentPost[];
+  hasMore: boolean;
+}
+
+/** One page of a listing. Asks for one row beyond the page so "is there a
+ *  next page" costs nothing extra — no count endpoint, no second request. */
+export async function getPostsPage(
+  kind: ContentKind,
+  page: number,
+  perPage: number,
+): Promise<PostPage> {
+  const offset = (page - 1) * perPage;
+  const rows = await get<ApiPost[]>(
+    `/posts?kind=${kind}&limit=${perPage + 1}&offset=${offset}`,
+    ["content", `content:${kind}`],
+    TTL_LIST,
+  );
+  const all = (rows ?? []).map(toPost);
+  return { posts: all.slice(0, perPage), hasMore: all.length > perPage };
+}
+
+/** The newest few — the footer's column, not a listing. */
+export async function getRecentPosts(kind: ContentKind, n: number): Promise<ContentPost[]> {
+  const rows = await get<ApiPost[]>(
+    `/posts?kind=${kind}&limit=${n}`,
+    ["content", `content:${kind}`],
+    TTL_LIST,
+  );
   return (rows ?? []).map(toPost);
 }
 
