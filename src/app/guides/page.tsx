@@ -13,8 +13,8 @@ export const metadata: Metadata = seo({
     "Field guides for what actually works on dating apps in 2026. Openers, replies, asking her out, recovery scripts.",
 });
 
-export default function GuidesIndexPage() {
-  const posts = getAllPosts("guides");
+export default async function GuidesIndexPage() {
+  const posts = await getAllPosts("guides");
 
   return (
     <>

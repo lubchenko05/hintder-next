@@ -13,8 +13,8 @@ export const metadata: Metadata = seo({
     "Real people who matched, found the right words, and ended up in something real. The couples who started with one good message.",
 });
 
-export default function StoriesIndexPage() {
-  const posts = getAllPosts("stories");
+export default async function StoriesIndexPage() {
+  const posts = await getAllPosts("stories");
 
   return (
     <>

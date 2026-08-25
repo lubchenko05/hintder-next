@@ -237,11 +237,10 @@ const featuredBadges = [
   { href: "https://weliketools.com/tool/hintder", src: "https://weliketools.com/assets/images/badge-dark.png", alt: "We Like Tools" },
 ] as const;
 
-export function Footer() {
+export async function Footer() {
   /* Server component — the posts are markdown in the repo, so this costs a
      read at build time and nothing at runtime. */
-  const guides = safePosts("guides");
-  const stories = safePosts("stories");
+  const [guides, stories] = await Promise.all([safePosts("guides"), safePosts("stories")]);
 
   return (
     <footer>
@@ -314,11 +313,12 @@ export function Footer() {
   );
 }
 
-function safePosts(kind: "guides" | "stories") {
+async function safePosts(kind: "guides" | "stories") {
   try {
-    return getAllPosts(kind).slice(0, FOOTER_POSTS);
+    return (await getAllPosts(kind)).slice(0, FOOTER_POSTS);
   } catch (err) {
-    /* A missing content dir must never take the whole footer down. */
+    /* An unreachable API must never take the whole footer — and with it every
+       page that renders one — down. */
     console.error(`footer: failed to list ${kind}`, err);
     return [];
   }

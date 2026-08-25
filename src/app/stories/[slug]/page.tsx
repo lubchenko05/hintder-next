@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { seo, clampDescription } from "@/lib/seo";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import {
@@ -18,10 +18,23 @@ import {
 } from "@/components/stories/StoryBlocks";
 import { ArrowRight } from "@/components/brand/Icons";
 
-export const revalidate = 3600;
+/* Posts now live in the backend, so a slug can appear between builds:
+   dynamicParams lets the first request render it server-side (a crawler never
+   sees an empty page), and the short TTL bounds how stale an instance can get
+   — the per-instance ISR cache means revalidation only refreshes one of them. */
+export const dynamicParams = true;
+export const revalidate = 120;
 
 export async function generateStaticParams() {
-  return getAllSlugs("stories").map((slug) => ({ slug }));
+  /* Best effort: if the API is down at build time we ship zero prerendered
+     posts and every one of them renders on demand — a slow first hit beats a
+     failed build. */
+  try {
+    const slugs = await getAllSlugs("stories");
+    return slugs.map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -31,7 +44,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostWithHtml("stories", slug);
-  if (!post) return { title: "Story" };
+  if (!post || "redirectTo" in post) return { title: "Story" };
   const description = clampDescription(post.excerpt);
   return seo({
     path: `/stories/${slug}`,
@@ -50,7 +63,11 @@ export default async function StoryPostPage({
   const { slug } = await params;
   const post = await getPostWithHtml("stories", slug);
   if (!post) return notFound();
-  const related = getRelatedPosts("stories", post.slug, post.category, 3);
+  /* A renamed slug keeps its traffic: the API answers with where it went and
+     we send a PERMANENT redirect (308) — a temporary 307 would tell crawlers
+     to keep the old URL indexed forever. */
+  if ("redirectTo" in post) permanentRedirect(post.redirectTo);
+  const related = await getRelatedPosts("stories", post.slug, 3);
 
   return (
     <>

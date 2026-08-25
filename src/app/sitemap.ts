@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getAllPosts } from "@/lib/content";
+import { getSitemapEntries } from "@/lib/content";
 import { TOOLS } from "@/lib/tools";
 import { SITE_URL } from "@/lib/site";
 
@@ -35,29 +35,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/refund`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  let guideEntries: MetadataRoute.Sitemap = [];
+  /* One call for both collections: the backend already knows what is visible,
+     and asking it twice would let the two halves disagree mid-publish. */
+  let postEntries: MetadataRoute.Sitemap = [];
   try {
-    guideEntries = getAllPosts("guides").map((post) => ({
-      url: `${BASE_URL}/guides/${post.slug}`,
-      lastModified: safeDate(post.date, now),
-      changeFrequency: "monthly",
+    const rows = await getSitemapEntries();
+    postEntries = rows.map((row) => ({
+      url: `${BASE_URL}/${row.kind}/${row.slug}`,
+      lastModified: safeDate(row.updatedAt, now),
+      changeFrequency: "monthly" as const,
       priority: 0.7,
     }));
   } catch (err) {
-    console.error("sitemap: failed to enumerate guides", err);
+    /* Never emit a sitemap missing every post: better to serve the last cached
+       copy than to tell Google the content is gone. */
+    console.error("sitemap: failed to enumerate posts", err);
   }
 
-  let storyEntries: MetadataRoute.Sitemap = [];
-  try {
-    storyEntries = getAllPosts("stories").map((post) => ({
-      url: `${BASE_URL}/stories/${post.slug}`,
-      lastModified: safeDate(post.date, now),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    }));
-  } catch (err) {
-    console.error("sitemap: failed to enumerate stories", err);
-  }
-
-  return [...staticEntries, ...guideEntries, ...storyEntries];
+  return [...staticEntries, ...postEntries];
 }

@@ -46,6 +46,16 @@ jobs:
           NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: live_2beaf1bd0f5f07530859dad0a5e
           NEXT_PUBLIC_PADDLE_ENV: production
 
+      - name: Inject runtime secrets into app.yaml
+        # The revalidate secret must exist at RUNTIME (the /api/revalidate route
+        # compares against it), and app.yaml is committed — so the value is
+        # spliced in here from the repo secret instead of living in git.
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          awk -v s="$REVALIDATE_SECRET" '{print} /NEXT_PUBLIC_API_URL:/{print "  REVALIDATE_SECRET: \"" s "\""}' app.yaml > app.yaml.new
+          mv app.yaml.new app.yaml
+
       - name: Google Auth
         uses: google-github-actions/auth@v2
         with:
