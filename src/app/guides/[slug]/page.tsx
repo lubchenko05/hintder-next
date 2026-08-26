@@ -38,13 +38,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPostWithHtml("guides", slug);
   if (!post || "redirectTo" in post) return { title: "Guide" };
-  const description = clampDescription(post.excerpt);
+  const description = clampDescription(post.metaDescription ?? post.excerpt);
   return seo({
     path: `/guides/${slug}`,
-    title: post.seoTitle ?? post.title,
+    title: post.metaTitle ?? post.seoTitle ?? post.title,
     description,
     ogTitle: post.title,
     ogDescription: description,
+    canonical: post.canonicalUrl,
+    noindex: post.noindex,
   });
 }
 

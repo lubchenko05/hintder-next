@@ -31,12 +31,21 @@ export function seo(opts: {
   description?: string;
   ogTitle?: string;
   ogDescription?: string;
+  /** Canonical override — a post syndicated from elsewhere points home. */
+  canonical?: string;
+  /** Keep the page out of the index while still serving it. */
+  noindex?: boolean;
 }): Metadata {
-  const { path, title, description, ogTitle, ogDescription } = opts;
+  const { path, title, description, ogTitle, ogDescription, canonical, noindex } = opts;
   return {
     ...(title !== undefined ? { title } : {}),
     ...(description !== undefined ? { description } : {}),
-    alternates: { canonical: path },
+    /* Explicit rather than inherited: without it a noindex post renders the
+       site default (index, follow) and gets indexed anyway. */
+    robots: noindex
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+    alternates: { canonical: canonical ?? path },
     openGraph: {
       title: ogTitle ?? OG_TITLE,
       description: ogDescription ?? OG_DESCRIPTION,

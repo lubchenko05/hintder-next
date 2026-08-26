@@ -48,9 +48,16 @@ export async function POST(request: Request) {
      the next visitor be served the old copy while the new one is fetched — the
      single-argument form is deprecated and blocks the next request instead. */
   for (const tag of tags) revalidateTag(tag, "max");
-  /* "page" (not "layout") — we are invalidating the rendered route, not the
-     shell around it. */
-  for (const path of paths) revalidatePath(path, "page");
+  /* Both scopes, deliberately. "page" refreshes the route's content; on its
+     own it left a previously-cached 404 shell in place, so a slug that had
+     been requested before it existed came back with the post's body under the
+     not-found page's <head> — default title, no canonical — for the whole TTL,
+     which is exactly the window in which we submit the URL for indexing.
+     "layout" drops that shell too. */
+  for (const path of paths) {
+    revalidatePath(path, "page");
+    revalidatePath(path, "layout");
+  }
 
   return NextResponse.json({ revalidated: true, tags, paths });
 }

@@ -71,6 +71,10 @@ function toPost(row: ApiPost): ContentPost {
     readTime: `${row.read_time_minutes} min`,
     persona: row.persona ?? undefined,
     blocks: row.blocks ?? undefined,
+    noindex: row.noindex ?? undefined,
+    canonicalUrl: row.canonical_url ?? undefined,
+    metaTitle: row.meta_title ?? undefined,
+    metaDescription: row.meta_description ?? undefined,
   };
 }
 

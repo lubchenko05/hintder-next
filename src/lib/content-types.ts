@@ -73,6 +73,14 @@ export interface ContentPost {
   persona?: string;
   /** Ordered story blocks rendered above the markdown body. */
   blocks?: StoryBlock[];
+  /* ─── Per-post SEO overrides, set in the CMS. Dropping any of these on the
+     way through means the page silently renders the site defaults. ─── */
+  /** Serve the page but keep it out of the index. */
+  noindex?: boolean;
+  /** Absolute canonical, when the original lives on another domain. */
+  canonicalUrl?: string;
+  metaTitle?: string;
+  metaDescription?: string;
   /* ─── Legacy story fields — still supported as fallback when
      no `blocks` array is present. New stories should use `blocks`. */
   metrics?: StoryMetric[];
