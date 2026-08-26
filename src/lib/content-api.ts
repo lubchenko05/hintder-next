@@ -43,18 +43,46 @@ interface ApiPost {
   meta_description?: string | null;
 }
 
-async function get<T>(path: string, tags: string[], ttl: number): Promise<T | null> {
-  try {
-    const res = await fetch(`${API}${path}`, {
-      next: { revalidate: ttl, tags },
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    /* The caller decides what "no answer" means; never take the page down. */
-    return null;
+/** The API scales to zero, so a first request after an idle spell pays a cold
+ *  start. Three seconds used to be the whole budget, which meant a cold start
+ *  read as "no such post". */
+const TIMEOUT_MS = 12000;
+
+class ApiUnreachable extends Error {}
+
+/** Fetch one endpoint.
+ *
+ *  `null` means the API answered and the thing is not there. An API that did
+ *  NOT answer throws instead — the distinction matters more than it looks:
+ *  collapsing both into `null` made a cold start indistinguishable from a
+ *  deleted post, so a detail page would call notFound() and ISR would cache a
+ *  404 over a live post until the TTL ran out.
+ *
+ *  `softFail` opts a caller back into `null` for both cases — right for a
+ *  listing or the footer, where an empty section beats a 500. */
+async function get<T>(
+  path: string,
+  tags: string[],
+  ttl: number,
+  softFail = false,
+): Promise<T | null> {
+  let lastError: unknown;
+  /* One retry: a cold start usually loses only the first request. */
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`${API}${path}`, {
+        next: { revalidate: ttl, tags },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new ApiUnreachable(`${path} → ${res.status}`);
+      return (await res.json()) as T;
+    } catch (err) {
+      lastError = err;
+    }
   }
+  if (softFail) return null;
+  throw new ApiUnreachable(`content API unreachable: ${path} (${String(lastError)})`);
 }
 
 /** Map the API's snake_case row onto the shape the components already expect. */
@@ -95,6 +123,7 @@ export async function getPostsPage(
     `/posts?kind=${kind}&limit=${perPage + 1}&offset=${offset}`,
     ["content", `content:${kind}`],
     TTL_LIST,
+    true,
   );
   const all = (rows ?? []).map(toPost);
   return { posts: all.slice(0, perPage), hasMore: all.length > perPage };
@@ -106,12 +135,18 @@ export async function getRecentPosts(kind: ContentKind, n: number): Promise<Cont
     `/posts?kind=${kind}&limit=${n}`,
     ["content", `content:${kind}`],
     TTL_LIST,
+    true,
   );
   return (rows ?? []).map(toPost);
 }
 
 export async function getAllSlugs(kind: ContentKind): Promise<string[]> {
-  const rows = await get<{ kind: ContentKind; slug: string }[]>("/sitemap", ["content"], TTL_LIST);
+  const rows = await get<{ kind: ContentKind; slug: string }[]>(
+    "/sitemap",
+    ["content"],
+    TTL_LIST,
+    true,
+  );
   return (rows ?? []).filter((r) => r.kind === kind).map((r) => r.slug);
 }
 
@@ -139,6 +174,8 @@ export async function getRelatedPosts(
     `/related/${kind}/${slug}?limit=${limit}`,
     ["content", `content:${kind}:${slug}`],
     TTL_POST,
+    /* A missing "read next" strip is not worth 500-ing a post that rendered. */
+    true,
   );
   return (rows ?? []).map(toPost);
 }
@@ -151,6 +188,7 @@ export async function getSitemapEntries(): Promise<
     "/sitemap",
     ["content"],
     TTL_LIST,
+    true,
   );
   return (rows ?? []).map((r) => ({ kind: r.kind, slug: r.slug, updatedAt: r.updated_at }));
 }
