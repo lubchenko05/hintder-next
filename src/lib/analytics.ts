@@ -12,6 +12,8 @@
 
 import * as amplitude from "@amplitude/analytics-browser";
 
+import { metaTrack } from "@/lib/metaPixel";
+
 const AMPLITUDE_API_KEY = "95e9508e3914abfa276b3731d6780117";
 
 let initialized = false;
@@ -62,6 +64,9 @@ export const track = (
   properties?: Record<string, unknown>,
 ): void => {
   amplitude.track(eventName, properties);
+  /* Same event, second destination. Kept here rather than at the call sites so
+     a new funnel event cannot reach one tool and miss the other. */
+  metaTrack(eventName, properties);
 };
 
 /* Pre-defined events — keep names stable so dashboards don't drift. */

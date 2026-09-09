@@ -3,6 +3,7 @@ import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { SITE_URL } from "@/lib/site";
 
 /* Google Analytics 4 measurement id (public by design). GA4 "enhanced
@@ -69,6 +70,14 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  /* Proves to Meta that we own hintder.ai. Verification is what lets the
+     business own its own conversion events instead of sharing attribution
+     with anyone else who links here — Meta re-checks the tag, so it stays. */
+  verification: {
+    other: {
+      "facebook-domain-verification": "p69wvgxnwz3uhymjnmbkztryqmxsfr",
+    },
+  },
 };
 
 export default function RootLayout({
@@ -83,6 +92,7 @@ export default function RootLayout({
     >
       <body className="min-h-dvh flex flex-col font-sans antialiased">
         <Providers>{children}</Providers>
+        <MetaPixel />
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
