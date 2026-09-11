@@ -35,18 +35,66 @@ function fbq(): Fbq | null {
   return (window as unknown as { fbq?: Fbq }).fbq ?? null;
 }
 
+/** Events that happened before the pixel script finished loading.
+ *
+ *  The pixel loads afterInteractive, so it is NOT there during hydration. A
+ *  Google sign-in comes back through a full page load and fires "Sign Up" from
+ *  the auth listener — which can easily win that race. Dropping the event then
+ *  loses the one conversion the ad campaign optimises against, silently, which
+ *  is exactly what happened on the first campaign: zero CompleteRegistration
+ *  events ever reached Meta. */
+const pending: [string, Record<string, unknown> | undefined][] = [];
+let flushTimer: ReturnType<typeof setInterval> | null = null;
+
+function dispatch(f: Fbq, eventName: string, properties?: Record<string, unknown>): void {
+  const standard = STANDARD[eventName];
+  if (standard) {
+    f("track", standard, properties ?? {});
+  } else {
+    f("trackCustom", eventName.replace(/\s+/g, ""), properties ?? {});
+  }
+}
+
+/** Poll briefly for the pixel, then give up — a blocked pixel never arrives and
+ *  we must not keep a timer alive for the life of the tab. */
+function startFlushing(): void {
+  if (flushTimer !== null) return;
+  let waited = 0;
+  flushTimer = setInterval(() => {
+    const f = fbq();
+    waited += 300;
+    if (f) {
+      while (pending.length) {
+        const next = pending.shift();
+        if (next) {
+          try {
+            dispatch(f, next[0], next[1]);
+          } catch {
+            /* keep draining the rest */
+          }
+        }
+      }
+    }
+    if (f || waited >= 15000) {
+      if (flushTimer !== null) clearInterval(flushTimer);
+      flushTimer = null;
+      if (!f) pending.length = 0;
+    }
+  }, 300);
+}
+
 /** Mirror one funnel event into the pixel. Never throws: an ad-blocked or
  *  not-yet-loaded pixel must not break the product action that triggered it. */
 export function metaTrack(eventName: string, properties?: Record<string, unknown>): void {
+  if (typeof window === "undefined" || IGNORED.has(eventName)) return;
   const f = fbq();
-  if (!f || IGNORED.has(eventName)) return;
+  if (!f) {
+    pending.push([eventName, properties]);
+    startFlushing();
+    return;
+  }
   try {
-    const standard = STANDARD[eventName];
-    if (standard) {
-      f("track", standard, properties ?? {});
-    } else {
-      f("trackCustom", eventName.replace(/\s+/g, ""), properties ?? {});
-    }
+    dispatch(f, eventName, properties);
   } catch {
     /* Reporting is never worth a broken page. */
   }
