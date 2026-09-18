@@ -120,6 +120,7 @@ export function PricingPlans() {
           analytics.checkoutOpened(planId);
           await openSubscriptionCheckout({
             priceId: plan.paddle_price_id,
+            discountId: plan.paddle_discount_id,
             uid: auth.uid,
             planId,
             email: auth.email,

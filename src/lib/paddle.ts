@@ -36,11 +36,16 @@ export async function openSubscriptionCheckout(opts: {
   uid: string;
   planId: string;
   email?: string;
+  /** First-invoice discount. The Paddle price carries the RECURRING amount; this
+   *  brings the first payment down to the promo price shown on the pricing page.
+   *  Omit it and the customer is charged the full recurring amount immediately. */
+  discountId?: string | null;
 }): Promise<boolean> {
   const paddle = await getPaddle();
   if (!paddle) return false;
   paddle.Checkout.open({
     items: [{ priceId: opts.priceId, quantity: 1 }],
+    ...(opts.discountId ? { discountId: opts.discountId } : {}),
     ...(opts.email ? { customer: { email: opts.email } } : {}),
     customData: { uid: opts.uid, plan_id: opts.planId },
     settings: {
