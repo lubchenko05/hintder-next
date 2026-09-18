@@ -6,7 +6,7 @@ import { ArrowRight } from "@/components/brand/Icons";
 import { billingApi, type Plan } from "@/lib/api";
 import { getToken } from "@/lib/auth-token";
 import { useAuth } from "@/hooks/useAuth";
-import { openSubscriptionCheckout, paddleConfigured } from "@/lib/paddle";
+import { getPaddle, openSubscriptionCheckout, paddleConfigured } from "@/lib/paddle";
 import { refreshHints } from "@/hooks/useCredits";
 import { refreshSubscription, useSubscription } from "@/hooks/useSubscription";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -154,6 +154,16 @@ export function PricingPlans() {
       .then(setPlans)
       .catch(() => setPlans([]));
     analytics.pricingViewed();
+  }, []);
+
+  /* Paddle mails an unpaid invoice back to our default payment link as
+     /pricing?_ptxn=txn_… and reopens that transaction itself — but only if
+     Paddle.js is already running. We otherwise boot it lazily on the first
+     card click, so without this the link would land on a plain pricing page. */
+  useEffect(() => {
+    if (!paddleConfigured()) return;
+    if (!new URLSearchParams(window.location.search).has("_ptxn")) return;
+    void getPaddle();
   }, []);
 
   /* Open on the interval the user already pays for (e.g. yearly subscribers
