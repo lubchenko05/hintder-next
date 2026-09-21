@@ -55,11 +55,15 @@ function dispatch(
   eventId?: string,
 ): void {
   const standard = STANDARD[eventName];
-  const options = eventId ? { eventID: eventId } : undefined;
-  if (standard) {
-    f("track", standard, properties ?? {}, options);
+  const method = standard ? "track" : "trackCustom";
+  const name = standard ?? eventName.replace(/\s+/g, "");
+  /* Omit the options argument entirely rather than passing an explicit
+     undefined: fbq reads its arguments positionally, and a trailing undefined
+     is not the same thing to it as an absent one. */
+  if (eventId) {
+    f(method, name, properties ?? {}, { eventID: eventId });
   } else {
-    f("trackCustom", eventName.replace(/\s+/g, ""), properties ?? {}, options);
+    f(method, name, properties ?? {});
   }
 }
 
