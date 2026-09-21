@@ -124,8 +124,8 @@ export function useAuth() {
       initAnalytics(fbUser.uid);
       try {
         const idToken = await fbUser.getIdToken();
-        const { access_token } = await authApi.firebaseLogin(idToken);
-        setToken(access_token);
+        const login = await authApi.firebaseLogin(idToken);
+        setToken(login.access_token);
         /* Anon → permanent transition: bring the anonymous account's subscription
            + hints to the now-permanent account. Server no-ops if the uid was
            preserved (linking); transfers if the user signed into an existing
@@ -133,16 +133,23 @@ export function useAuth() {
         if (wasAnon === true && !fbUser.isAnonymous && prevToken) {
           void meApi.claim(prevToken).catch(() => undefined);
         }
-        /* Analytics: identify permanent users; treat the anon→permanent
-           transition as a sign-up (the conversion we optimise against). */
+        /* Analytics: identify permanent users, and report the sign-up — the
+           conversion the ad spend is optimised against.
+
+           The server decides whether this was a registration, not us. We used
+           to infer it from an in-memory "was anonymous a moment ago" ref,
+           which is only ever true when the upgrade happens inside one page
+           session. A magic-link sign-in arrives on a cold load from the mail
+           app, so the ref was null and the event was silently skipped — which
+           is why real registrations never showed up in Meta. */
         if (!fbUser.isAnonymous) {
           identifyUser(fbUser.uid, { email: fbUser.email ?? undefined });
-          if (wasAnon === true) {
+          if (login.registered) {
             const method =
               fbUser.providerData[0]?.providerId === "google.com"
                 ? "google"
                 : "email";
-            analytics.signUp(method);
+            analytics.signUp(method, login.registration_event_id ?? undefined);
           }
         }
         setAuth({

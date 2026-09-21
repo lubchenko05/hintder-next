@@ -149,7 +149,17 @@ export interface Paginated<T> {
 export const authApi = {
   /** Exchange a Firebase ID token for a backend JWT. */
   firebaseLogin: (idToken: string) =>
-    apiFetch<{ access_token: string; token_type: string }>("/auth/firebase", {
+    apiFetch<{
+      access_token: string;
+      token_type: string;
+      /** True when this exchange was the moment the user registered. The
+       *  browser cannot tell: a magic-link sign-in lands on a cold page load
+       *  with no earlier anonymous state to compare against. */
+      registered?: boolean;
+      /** The id the server reported that registration to Meta under, so the
+       *  pixel can fire the same event without it being counted twice. */
+      registration_event_id?: string | null;
+    }>("/auth/firebase", {
       method: "POST",
       body: { token: idToken, device_id: getDeviceId() },
       auth: false,

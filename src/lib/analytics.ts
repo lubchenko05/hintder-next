@@ -62,17 +62,21 @@ export const resetUser = (): void => {
 export const track = (
   eventName: string,
   properties?: Record<string, unknown>,
+  /* Only the pixel uses this: it deduplicates the browser event against the
+     same event sent server-side. Amplitude has no notion of it. */
+  eventId?: string,
 ): void => {
   amplitude.track(eventName, properties);
   /* Same event, second destination. Kept here rather than at the call sites so
      a new funnel event cannot reach one tool and miss the other. */
-  metaTrack(eventName, properties);
+  metaTrack(eventName, properties, eventId);
 };
 
 /* Pre-defined events — keep names stable so dashboards don't drift. */
 export const analytics = {
   // Auth / conversion
-  signUp: (method: string) => track("Sign Up", { method }),
+  signUp: (method: string, eventId?: string) =>
+    track("Sign Up", { method }, eventId),
   login: (method: string) => track("Login", { method }),
   logout: () => track("Logout"),
 

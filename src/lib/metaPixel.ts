@@ -43,15 +43,23 @@ function fbq(): Fbq | null {
  *  loses the one conversion the ad campaign optimises against, silently, which
  *  is exactly what happened on the first campaign: zero CompleteRegistration
  *  events ever reached Meta. */
-const pending: [string, Record<string, unknown> | undefined][] = [];
+const pending: [string, Record<string, unknown> | undefined, string | undefined][] = [];
 let flushTimer: ReturnType<typeof setInterval> | null = null;
 
-function dispatch(f: Fbq, eventName: string, properties?: Record<string, unknown>): void {
+function dispatch(
+  f: Fbq,
+  eventName: string,
+  properties?: Record<string, unknown>,
+  /* Matches the id the backend used when it reported the same event through
+     the Conversions API, so Meta counts one conversion instead of two. */
+  eventId?: string,
+): void {
   const standard = STANDARD[eventName];
+  const options = eventId ? { eventID: eventId } : undefined;
   if (standard) {
-    f("track", standard, properties ?? {});
+    f("track", standard, properties ?? {}, options);
   } else {
-    f("trackCustom", eventName.replace(/\s+/g, ""), properties ?? {});
+    f("trackCustom", eventName.replace(/\s+/g, ""), properties ?? {}, options);
   }
 }
 
@@ -68,7 +76,7 @@ function startFlushing(): void {
         const next = pending.shift();
         if (next) {
           try {
-            dispatch(f, next[0], next[1]);
+            dispatch(f, next[0], next[1], next[2]);
           } catch {
             /* keep draining the rest */
           }
@@ -85,16 +93,20 @@ function startFlushing(): void {
 
 /** Mirror one funnel event into the pixel. Never throws: an ad-blocked or
  *  not-yet-loaded pixel must not break the product action that triggered it. */
-export function metaTrack(eventName: string, properties?: Record<string, unknown>): void {
+export function metaTrack(
+  eventName: string,
+  properties?: Record<string, unknown>,
+  eventId?: string,
+): void {
   if (typeof window === "undefined" || IGNORED.has(eventName)) return;
   const f = fbq();
   if (!f) {
-    pending.push([eventName, properties]);
+    pending.push([eventName, properties, eventId]);
     startFlushing();
     return;
   }
   try {
-    dispatch(f, eventName, properties);
+    dispatch(f, eventName, properties, eventId);
   } catch {
     /* Reporting is never worth a broken page. */
   }
