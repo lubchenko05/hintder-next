@@ -23,6 +23,7 @@ import {
   analyzeReply,
   regenerateMessage,
 } from "@/lib/ai";
+import { analytics } from "@/lib/analytics";
 import { useCredits } from "./useCredits";
 import { useMatches } from "./useMatches";
 
@@ -177,6 +178,7 @@ export function useAppFlow() {
     async (files: File[]) => {
       /* Gate: must have a credit to start an analysis */
       if (!credits.hasCredits) {
+        analytics.paywallHit();
         setPaywallOpen(true);
         return;
       }
@@ -191,6 +193,11 @@ export function useAppFlow() {
         credits.refresh();
         setAnalysis(result);
         setStep("analysis");
+        /* The moment a visitor actually gets something out of the product.
+           Everything before this is intent; this is the first result. Without
+           it the funnel has no reading at all between landing on the site and
+           opening the pricing page, which is most of the journey. */
+        analytics.readCreated();
         /* Open a new match row in the archive — gets upserted as the
            user moves through the flow. */
         const id = Math.random().toString(36).slice(2, 12);
@@ -229,6 +236,7 @@ export function useAppFlow() {
     async (style: MessageStyle, tone: MessageTone) => {
       if (!analysis) return;
       if (!credits.hasCredits) {
+        analytics.paywallHit();
         setPaywallOpen(true);
         return;
       }
@@ -269,6 +277,7 @@ export function useAppFlow() {
   const handleRegenerate = useCallback(async () => {
     if (!analysis) return;
     if (!credits.hasCredits) {
+      analytics.paywallHit();
       setPaywallOpen(true);
       return;
     }
@@ -286,6 +295,7 @@ export function useAppFlow() {
   const handleTweak = useCallback(
     async (message: GeneratedMessage, instruction: string) => {
       if (!credits.hasCredits) {
+        analytics.paywallHit();
         setPaywallOpen(true);
         return;
       }
@@ -351,6 +361,7 @@ export function useAppFlow() {
       if (!analysis) return;
       /* Reading her reply costs a credit (it's a real analysis call). */
       if (!credits.hasCredits) {
+        analytics.paywallHit();
         setPaywallOpen(true);
         return;
       }
@@ -392,6 +403,7 @@ export function useAppFlow() {
     const last = conversation[conversation.length - 1];
     if (!last || last.role !== "her") return;
     if (!credits.hasCredits) {
+      analytics.paywallHit();
       setPaywallOpen(true);
       return;
     }
