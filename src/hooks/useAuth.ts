@@ -77,7 +77,24 @@ export function useAuth() {
         /* Bootstrap a real anonymous account — re-fires with the anon user. */
         try {
           await signInAnonymously(fbAuth);
-        } catch {
+        } catch (err) {
+          /* Firebase could not create or persist a session — private browsing,
+             blocked site data, Safari's storage rules, a full disk. Whatever
+             the cause, this visitor is now in a dead state: no anonymous user
+             means no backend JWT, so nothing in the product works for them.
+
+             This used to be a bare `catch {}`. The page simply sat there
+             showing zero hints with a clean console, so we had no way of
+             knowing it was happening — to anyone, at any volume. Paid traffic
+             can die here without leaving a trace. */
+          const code = (err as AuthError)?.code ?? "unknown";
+          console.error("[auth] anonymous bootstrap failed:", code, err);
+          /* Amplitude has not been initialised yet — that only happens once
+             auth resolves, which is exactly what just failed. Without this the
+             event would sit in the SDK's pre-init queue and never be sent, so
+             the report we came here for would be lost. */
+          initAnalytics();
+          analytics.errorOccurred("auth_bootstrap_failed", code);
           setAuth({ uid: "anon", isAnonymous: true });
           setReady(true);
         }
