@@ -1,8 +1,104 @@
 "use client";
 
-import { useState, useCallback, useRef, useId } from "react";
+import { useState, useCallback, useRef, useId, useEffect } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  UploadExamples,
+  EXAMPLE_COUNT,
+  EXAMPLE_ASPECT,
+  type ExampleKind,
+} from "./UploadExamples";
+
+/* ── fitting the examples to whatever the drop zone can spare ───────────
+   The thumbnails are as large as the zone allows rather than a fixed small
+   size — on a roomy zone that is close to double. Both helpers mirror the
+   geometry in UploadExamples, so a change there wants a change here. */
+
+/* A ceiling, not a target: the height budget almost always binds first. It
+   only matters on a desktop zone with room to spare, where 110 left the
+   cards looking like an afterthought. */
+const EXAMPLE_MAX_W = 190;
+const EXAMPLE_MIN_W = 28;
+/* Below this the bio and the prompt stop being words and start being mush. */
+const EXAMPLE_READABLE_W = 72;
+/* What "tap to upload screenshots" is given when the cards sit beside it —
+   the copy has to be capped, or it stays on one long line and shoves them
+   off the edge of the zone. */
+const EXAMPLE_COPY_W = 152;
+
+function stripHeight(w: number, divider: boolean) {
+  const caption = Math.min(14, Math.max(8.5, w * 0.2));
+  return (
+    (divider ? 20 : 0) +
+    w / EXAMPLE_ASPECT +
+    Math.max(3, w * 0.08) +
+    caption * 1.2
+  );
+}
+
+function fitExamples(zoneW: number, zoneH: number, count: number) {
+  const spread = count + 0.22 * (count - 1);
+  const captionH = (w: number) =>
+    Math.min(14, Math.max(8.5, w * 0.2)) * 1.2 + Math.max(3, w * 0.08);
+
+  /* ── stacked: cards under the copy, the roomy case ─────────────────── */
+  const budget = zoneH - 62; /* two lines of copy, the gap, and some air */
+  const stackCap = Math.min(EXAMPLE_MAX_W, (zoneW - 32) / spread);
+  const widest = (divider: boolean) => {
+    for (let w = Math.floor(stackCap); w >= EXAMPLE_MIN_W; w--) {
+      if (stripHeight(w, divider) <= budget) return w;
+    }
+    return 0;
+  };
+  /* The "drop this" rule costs 20px — worth it while the cards stay big,
+     but below that those pixels buy more as picture than as label. */
+  const ruled = widest(true);
+  const bare = widest(false);
+  const stacked = ruled >= 44 ? ruled : bare;
+
+  /* Anything at least this wide can carry her bio and her prompt as actual
+     words, which is the whole reason the card is worth showing. */
+  if (stacked >= EXAMPLE_READABLE_W) {
+    const divider = ruled >= 44;
+    return {
+      orientation: "stacked" as const,
+      width: stacked,
+      showDivider: divider,
+      height: stripHeight(stacked, divider),
+    };
+  }
+
+  /* ── beside: a short but wide zone (a tool page packs a textarea under
+     the drop zone) has no vertical room left, and plenty sideways. ───── */
+  const sideW = Math.min(
+    EXAMPLE_MAX_W,
+    (zoneW - EXAMPLE_COPY_W - 14) / spread,
+    /* height-bound too: the card plus its caption must clear the zone */
+    ((zoneH - 8) * EXAMPLE_ASPECT) / (1 + 0.29 * EXAMPLE_ASPECT),
+  );
+  const side = Math.floor(sideW);
+  if (side >= EXAMPLE_READABLE_W && side / EXAMPLE_ASPECT + captionH(side) <= zoneH - 8) {
+    return {
+      orientation: "beside" as const,
+      width: side,
+      showDivider: false,
+      /* the horizontal offset the copy shifts by, not a height */
+      height: side * spread,
+    };
+  }
+
+  if (stacked >= EXAMPLE_MIN_W) {
+    const divider = ruled >= 44;
+    return {
+      orientation: "stacked" as const,
+      width: stacked,
+      showDivider: divider,
+      height: stripHeight(stacked, divider),
+    };
+  }
+  return null;
+}
 
 interface UploadZoneProps {
   onFilesSelected: (files: File[]) => void;
@@ -22,6 +118,8 @@ interface UploadZoneProps {
   hideSubmit?: boolean;
   /** Fires whenever the picked files change, so the page can drive its own CTA. */
   onFilesChange?: (files: File[]) => void;
+  /** Show worked examples of the right screenshot inside the empty state. */
+  example?: ExampleKind;
 }
 
 /* Rotation presets for stacked-photo effect */
@@ -49,12 +147,35 @@ export function UploadZone({
   compact = false,
   hideSubmit = false,
   onFilesChange,
+  example,
 }: UploadZoneProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
+  const zoneRef = useRef<HTMLLabelElement>(null);
+  const [zoneBox, setZoneBox] = useState({ w: 0, h: 0 });
+
+  /* The examples are absolutely positioned, so they add no height of their
+     own — which is what keeps this measurement from oscillating. */
+  useEffect(() => {
+    const el = zoneRef.current;
+    if (!el || !example) return;
+    const ro = new ResizeObserver(([entry]) => {
+      /* contentRect is the CONTENT box — the zone's own padding is already
+         excluded, so this is the space the strip and the tap-to-upload copy
+         actually have to share. */
+      const { width, height } = entry.contentRect;
+      setZoneBox((prev) =>
+        Math.abs(prev.w - width) < 1 && Math.abs(prev.h - height) < 1
+          ? prev
+          : { w: width, h: height },
+      );
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [example]);
 
   const addFiles = useCallback(
     (newFiles: FileList | File[]) => {
@@ -97,6 +218,11 @@ export function UploadZone({
   );
 
   const hasFiles = files.length > 0;
+  const fit =
+    example && zoneBox.h > 0
+      ? fitExamples(zoneBox.w, zoneBox.h, EXAMPLE_COUNT[example])
+      : null;
+  const showExamples = !!example && !hasFiles && !isDragging && !!fit;
 
   return (
     <div className="w-full flex-1 flex flex-col items-stretch gap-6 sm:gap-8">
@@ -141,6 +267,7 @@ export function UploadZone({
           works even before React hydrates (a programmatic input.click() does
           not). */}
       <label
+        ref={zoneRef}
         htmlFor={inputId}
         aria-disabled={isAnalyzing}
         onDragOver={(e) => {
@@ -182,8 +309,30 @@ export function UploadZone({
               "relative flex flex-col items-center justify-center px-6",
               compact ? "gap-3" : "gap-5",
             )}
+            /* The examples hang off the bottom of the zone; lift the centred
+               copy by their height so the two never meet. */
+            /* The copy moves by half the examples — up when they sit under
+               it, left when they sit beside it — so the pair reads as
+               centred instead of the copy holding dead centre while the
+               cards drift off to one side. */
+            style={
+              fit && showExamples
+                ? {
+                    transform:
+                      fit.orientation === "beside"
+                        ? `translateX(-${Math.round((fit.height + 12) / 2)}px)`
+                        : `translateY(-${Math.round((fit.height + 10) / 2)}px)`,
+                    ...(fit.orientation === "beside"
+                      ? { maxWidth: EXAMPLE_COPY_W }
+                      : {}),
+                  }
+                : undefined
+            }
           >
-            {/* Big plus icon */}
+            {/* Big plus icon — dropped when the examples are up: they are the
+                stronger affordance, and on a short zone this is the height
+                that lets them fit at all. */}
+            {!showExamples && (
             <div
               className={cn(
                 "relative rounded-full flex items-center justify-center transition-all duration-300",
@@ -208,6 +357,7 @@ export function UploadZone({
                 <path d="M12 5v14M5 12h14" />
               </svg>
             </div>
+            )}
 
             {/* Tap to upload text */}
             <div className={cn("text-center", compact ? "space-y-1" : "space-y-2")}>
@@ -230,8 +380,35 @@ export function UploadZone({
               </div>
             </div>
 
-            {/* Subtle accent line at the bottom */}
-            <div className="absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            {/* Worked examples — the prose hints tell people what to grab;
+                this shows them the shape, which is what actually stops the
+                cropped-face uploads. Hung off the copy with top-full so it
+                adds no height: a page whose column is already tight must not
+                be pushed into overlapping itself. */}
+            {showExamples && fit && (
+              <div
+                className={cn(
+                  "absolute",
+                  fit.orientation === "beside"
+                    ? "left-full top-1/2 ml-3 -translate-y-1/2"
+                    : "inset-x-0 top-full mt-2.5",
+                )}
+              >
+                <UploadExamples
+                  kind={example}
+                  width={fit.width}
+                  showDivider={fit.showDivider}
+                  beside={fit.orientation === "beside"}
+                />
+              </div>
+            )}
+
+            {/* Subtle accent line at the bottom — suppressed under the
+                examples, where it would read as a stray rule between the copy
+                and the thumbnails rather than as a finishing touch. */}
+            {!showExamples && (
+              <div className="absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            )}
           </div>
         ) : (
           /* With files — clean grid of photo thumbs */

@@ -144,6 +144,7 @@ export default function DecodePage() {
               hideHeadline
               compact
               hideSubmit
+              example="chat"
             />
             {shots.length > 0 && (
               <p

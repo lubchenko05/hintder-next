@@ -528,6 +528,7 @@ function AppWorkspace() {
                       hideHeadline
                       compact
                       hideSubmit
+                      example="profile"
                     />
                   </div>
 

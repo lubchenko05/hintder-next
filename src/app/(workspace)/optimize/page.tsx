@@ -133,6 +133,7 @@ export default function OptimizePage() {
                   hideHeadline
                   compact
                   hideSubmit
+                  example="yours"
                 />
               </div>
 
