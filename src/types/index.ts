@@ -202,7 +202,7 @@ export interface AuthState {
   /** True until the user links an email or OAuth. */
   isAnonymous: boolean;
   email?: string;
-  provider?: "google" | "email-link";
+  provider?: "google" | "email-link" | "anonymous";
 }
 
 export interface PricingTier {
