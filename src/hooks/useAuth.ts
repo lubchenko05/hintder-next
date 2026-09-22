@@ -8,7 +8,7 @@ import {
   isSignInWithEmailLink,
   linkWithCredential,
   linkWithPopup,
-  onAuthStateChanged,
+  onIdTokenChanged,
   signInAnonymously,
   signInWithCredential,
   signInWithEmailLink,
@@ -40,7 +40,7 @@ import type { AuthState } from "@/types";
    passwordless links.
 
    ONE listener for the whole app. This used to be a plain hook holding its own
-   useState and its own onAuthStateChanged, and nine components call it — so a
+   useState and its own Firebase listener, and nine components call it — so a
    single page mounted four or five copies, each racing to exchange the same
    Firebase token for a backend JWT. Production logs showed one uid arriving
    three times inside 31ms; the losers collided on the users primary key and
@@ -122,13 +122,27 @@ function getServerSnapshot(): Snapshot {
    transition and claim the anon's assets (post-payment sign-in). */
 let wasAnonymous: boolean | null = null;
 let started = false;
+/* Which user we have already exchanged for a backend JWT, as
+   `uid:isAnonymous`. onIdTokenChanged also fires on the hourly token refresh,
+   where nothing we care about has changed; without this we would hit the
+   backend every hour for every open tab. Set only after a successful
+   exchange, so a failed one is retried on the next event. */
+let exchanged: string | null = null;
+let inFlight: string | null = null;
 
 function start(): void {
   if (started || typeof window === "undefined") return;
   started = true;
 
-  onAuthStateChanged(fbAuth, async (fbUser) => {
+  /* onIdTokenChanged, not onAuthStateChanged. The latter only fires when the
+     signed-in user CHANGES, and linking Google to an anonymous account does
+     not change the user — same uid, it is simply no longer anonymous. So the
+     sign-in page sat there with isAnonymous still true and never redirected;
+     refreshing re-read the session and "fixed" it. onIdTokenChanged covers
+     sign-in, sign-out AND token refresh, which is what linking produces. */
+  onIdTokenChanged(fbAuth, async (fbUser) => {
     if (!fbUser) {
+      exchanged = null;
       clearToken();
       /* Bootstrap a real anonymous account — re-fires with the anon user. */
       try {
@@ -186,6 +200,9 @@ function start(): void {
     }
 
     /* Exchange this user (anon OR permanent) for a backend JWT. */
+    const identity = `${fbUser.uid}:${fbUser.isAnonymous}`;
+    if (identity === exchanged || identity === inFlight) return;
+    inFlight = identity;
     const wasAnon = wasAnonymous;
     const prevToken = getToken(); // current (maybe anon) JWT, before we overwrite it
     wasAnonymous = fbUser.isAnonymous;
@@ -232,6 +249,7 @@ function start(): void {
         error: null,
         ready: true,
       });
+      exchanged = identity;
     } catch {
       clearToken();
       update({
@@ -243,6 +261,8 @@ function start(): void {
         error: "backend",
         ready: true,
       });
+    } finally {
+      inFlight = null;
     }
   });
 }
@@ -320,7 +340,7 @@ async function signOut(): Promise<void> {
   clearToken();
   /* Hard-navigate home so the workspace unmounts and the URL + in-memory state
      reset — otherwise /app keeps showing the previous user's match. A fresh
-     anonymous account is bootstrapped by onAuthStateChanged on the new page. */
+     anonymous account is bootstrapped by the listener on the new page. */
   if (typeof window !== "undefined") window.location.assign("/");
 }
 
