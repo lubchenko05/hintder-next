@@ -19,13 +19,10 @@ import {
    only matters on a desktop zone with room to spare, where 110 left the
    cards looking like an afterthought. */
 const EXAMPLE_MAX_W = 190;
-const EXAMPLE_MIN_W = 28;
-/* Below this the bio and the prompt stop being words and start being mush. */
-const EXAMPLE_READABLE_W = 72;
-/* What "tap to upload screenshots" is given when the cards sit beside it —
-   the copy has to be capped, or it stays on one long line and shoves them
-   off the edge of the zone. */
-const EXAMPLE_COPY_W = 152;
+/* A floor, not a gate: the examples always show. Small is fine — the card
+   shape still reads as a profile grid or a chat — and the captions wrap
+   instead of colliding, which is what actually looked broken. */
+const EXAMPLE_MIN_W = 26;
 
 function stripHeight(w: number, divider: boolean) {
   const caption = Math.min(14, Math.max(8.5, w * 0.2));
@@ -33,71 +30,33 @@ function stripHeight(w: number, divider: boolean) {
     (divider ? 20 : 0) +
     w / EXAMPLE_ASPECT +
     Math.max(3, w * 0.08) +
+    /* One line: captions are short and almost always fit on one. They are
+       allowed to wrap when they don't, and the strip is absolutely
+       positioned, so the extra line costs nothing in layout — whereas
+       budgeting for it cost the examples entirely on a short zone. */
     caption * 1.2
   );
 }
 
 function fitExamples(zoneW: number, zoneH: number, count: number) {
   const spread = count + 0.22 * (count - 1);
-  const captionH = (w: number) =>
-    Math.min(14, Math.max(8.5, w * 0.2)) * 1.2 + Math.max(3, w * 0.08);
-
-  /* ── stacked: cards under the copy, the roomy case ─────────────────── */
-  const budget = zoneH - 62; /* two lines of copy, the gap, and some air */
-  const stackCap = Math.min(EXAMPLE_MAX_W, (zoneW - 32) / spread);
+  /* what is left once the two lines of copy above and a little air are paid for */
+  const budget = zoneH - 62;
+  const widthCap = Math.min(EXAMPLE_MAX_W, (zoneW - 32) / spread);
   const widest = (divider: boolean) => {
-    for (let w = Math.floor(stackCap); w >= EXAMPLE_MIN_W; w--) {
+    for (let w = Math.floor(widthCap); w >= EXAMPLE_MIN_W; w--) {
       if (stripHeight(w, divider) <= budget) return w;
     }
     return 0;
   };
-  /* The "drop this" rule costs 20px — worth it while the cards stay big,
-     but below that those pixels buy more as picture than as label. */
+  /* The "drop this" rule costs 20px — worth it while the cards stay big, but
+     below that those pixels buy more as picture than as label. */
   const ruled = widest(true);
   const bare = widest(false);
-  const stacked = ruled >= 44 ? ruled : bare;
-
-  /* Anything at least this wide can carry her bio and her prompt as actual
-     words, which is the whole reason the card is worth showing. */
-  if (stacked >= EXAMPLE_READABLE_W) {
-    const divider = ruled >= 44;
-    return {
-      orientation: "stacked" as const,
-      width: stacked,
-      showDivider: divider,
-      height: stripHeight(stacked, divider),
-    };
-  }
-
-  /* ── beside: a short but wide zone (a tool page packs a textarea under
-     the drop zone) has no vertical room left, and plenty sideways. ───── */
-  const sideW = Math.min(
-    EXAMPLE_MAX_W,
-    (zoneW - EXAMPLE_COPY_W - 14) / spread,
-    /* height-bound too: the card plus its caption must clear the zone */
-    ((zoneH - 8) * EXAMPLE_ASPECT) / (1 + 0.29 * EXAMPLE_ASPECT),
-  );
-  const side = Math.floor(sideW);
-  if (side >= EXAMPLE_READABLE_W && side / EXAMPLE_ASPECT + captionH(side) <= zoneH - 8) {
-    return {
-      orientation: "beside" as const,
-      width: side,
-      showDivider: false,
-      /* the horizontal offset the copy shifts by, not a height */
-      height: side * spread,
-    };
-  }
-
-  if (stacked >= EXAMPLE_MIN_W) {
-    const divider = ruled >= 44;
-    return {
-      orientation: "stacked" as const,
-      width: stacked,
-      showDivider: divider,
-      height: stripHeight(stacked, divider),
-    };
-  }
-  return null;
+  const width = ruled >= 72 ? ruled : bare;
+  if (width < EXAMPLE_MIN_W) return null;
+  const showDivider = ruled >= 72;
+  return { width, showDivider, height: stripHeight(width, showDivider) };
 }
 
 interface UploadZoneProps {
@@ -309,23 +268,12 @@ export function UploadZone({
               "relative flex flex-col items-center justify-center px-6",
               compact ? "gap-3" : "gap-5",
             )}
-            /* The examples hang off the bottom of the zone; lift the centred
-               copy by their height so the two never meet. */
-            /* The copy moves by half the examples — up when they sit under
-               it, left when they sit beside it — so the pair reads as
-               centred instead of the copy holding dead centre while the
-               cards drift off to one side. */
+            /* The copy rises by half the strip so the copy+strip pair reads
+               as centred, instead of the copy sitting dead centre with the
+               cards drifting away from it on a tall zone. */
             style={
               fit && showExamples
-                ? {
-                    transform:
-                      fit.orientation === "beside"
-                        ? `translateX(-${Math.round((fit.height + 12) / 2)}px)`
-                        : `translateY(-${Math.round((fit.height + 10) / 2)}px)`,
-                    ...(fit.orientation === "beside"
-                      ? { maxWidth: EXAMPLE_COPY_W }
-                      : {}),
-                  }
+                ? { transform: `translateY(-${Math.round((fit.height + 10) / 2)}px)` }
                 : undefined
             }
           >
@@ -386,19 +334,11 @@ export function UploadZone({
                 adds no height: a page whose column is already tight must not
                 be pushed into overlapping itself. */}
             {showExamples && fit && (
-              <div
-                className={cn(
-                  "absolute",
-                  fit.orientation === "beside"
-                    ? "left-full top-1/2 ml-3 -translate-y-1/2"
-                    : "inset-x-0 top-full mt-2.5",
-                )}
-              >
+              <div className="absolute inset-x-0 top-full mt-2.5">
                 <UploadExamples
                   kind={example}
                   width={fit.width}
                   showDivider={fit.showDivider}
-                  beside={fit.orientation === "beside"}
                 />
               </div>
             )}

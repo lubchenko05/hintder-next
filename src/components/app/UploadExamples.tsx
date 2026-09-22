@@ -329,16 +329,12 @@ export function UploadExamples({
   kind,
   width,
   showDivider,
-  beside = false,
 }: {
   kind: ExampleKind;
   /** Card width in px, already fitted to the zone by the caller. */
   width: number;
   /** Dropped on short zones, where the rule costs more height than it earns. */
   showDivider: boolean;
-  /** Sitting to the right of the copy rather than under it, so the block
-   *  must size to its contents instead of filling the copy's width. */
-  beside?: boolean;
 }) {
   /* Below this the bio and prompt lines stop being words and start being
      grey mush, so the card shows the photo and her name only. */
@@ -353,10 +349,7 @@ export function UploadExamples({
        picker rather than landing on a card. */
     <div
       aria-hidden
-      className={cn(
-        "pointer-events-none flex flex-col items-center select-none",
-        beside ? "w-auto" : "w-full",
-      )}
+      className="pointer-events-none flex w-full flex-col items-center select-none"
       style={{ gap: showDivider ? 7 : 5 }}
     >
       {showDivider && (
@@ -402,7 +395,10 @@ export function UploadExamples({
               <Badge good={item.good} />
             </div>
             <span
-              className="whitespace-nowrap text-center font-display italic leading-[1.2]"
+              /* Wraps rather than running into the neighbouring caption:
+                  nowrap made "photos + bio" and "one selfie" overlap once the
+                  cards got small. */
+              className="text-center font-display italic leading-[1.2]"
               style={{
                 fontWeight: 300,
                 fontSize: captionSize,
