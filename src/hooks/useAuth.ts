@@ -89,6 +89,9 @@ type Snapshot = {
   error: "backend" | null;
   /* User-facing sign-in notice, e.g. "this email is registered via another method". */
   notice: string | null;
+  /* An email sign-in link was opened in a browser that did not request it,
+     so we do not know which address it was for. The sign-in page asks. */
+  emailLinkNeedsEmail: boolean;
 };
 
 const INITIAL: Snapshot = {
@@ -96,6 +99,7 @@ const INITIAL: Snapshot = {
   ready: false,
   error: null,
   notice: null,
+  emailLinkNeedsEmail: false,
 };
 
 let snapshot: Snapshot = INITIAL;
@@ -177,7 +181,16 @@ function start(): void {
       isSignInWithEmailLink(fbAuth, window.location.href)
     ) {
       const pendingEmail = window.localStorage.getItem(EMAIL_FOR_SIGNIN);
-      if (pendingEmail) {
+      if (!pendingEmail) {
+        /* The link opened somewhere other than where it was requested — in
+           practice the mail app hands it to Safari/Chrome, while the request
+           came from Instagram's built-in browser. We used to skip it silently
+           and leave the visitor anonymous. Ask for the address instead; the
+           anonymous session below stays usable meanwhile. Only while still
+           anonymous: once the link is spent the URL keeps its parameters, and
+           the next token event must not ask for the address a second time. */
+        if (fbUser.isAnonymous) update({ emailLinkNeedsEmail: true });
+      } else {
         window.localStorage.removeItem(EMAIL_FOR_SIGNIN);
         const cred = EmailAuthProvider.credentialWithLink(
           pendingEmail,
@@ -355,15 +368,48 @@ async function sendEmailLink(email: string, next: string): Promise<void> {
   window.localStorage.setItem(EMAIL_FOR_SIGNIN, email);
 }
 
+/* Finish an email sign-in link opened in a browser that did not request it.
+   Same upgrade rule as the listener: link onto the anonymous account when
+   there is one (keeps its uid and hints), otherwise sign in. Throws so the
+   page can say the address did not match the link. */
+async function completeEmailLink(email: string): Promise<void> {
+  const href = window.location.href;
+  const cred = EmailAuthProvider.credentialWithLink(email, href);
+  const cur = fbAuth.currentUser;
+  try {
+    if (cur && cur.isAnonymous) {
+      await linkWithCredential(cur, cred);
+    } else {
+      await signInWithEmailLink(fbAuth, email, href);
+    }
+  } catch {
+    /* The address already owns an account → sign into that one. If this also
+       fails the link and the address do not belong together. */
+    await signInWithEmailLink(fbAuth, email, href);
+  }
+  update({ emailLinkNeedsEmail: false });
+}
+
 /* ── the hook ─────────────────────────────────────────────────────────── */
 
 export function useAuth() {
-  const { auth, ready, error, notice } = useSyncExternalStore(
+  const { auth, ready, error, notice, emailLinkNeedsEmail } = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot,
   );
   const clearNotice = useCallback(() => update({ notice: null }), []);
 
-  return { auth, ready, error, notice, clearNotice, signInWithGoogle, sendEmailLink, signOut };
+  return {
+    auth,
+    ready,
+    error,
+    notice,
+    emailLinkNeedsEmail,
+    clearNotice,
+    signInWithGoogle,
+    sendEmailLink,
+    completeEmailLink,
+    signOut,
+  };
 }

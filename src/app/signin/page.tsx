@@ -5,6 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Mark } from "@/components/brand/Mark";
 import { ArrowRight } from "@/components/brand/Icons";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  detectInAppBrowser,
+  inAppBrowserName,
+  isAndroid,
+  systemBrowserUrl,
+  type InAppBrowser,
+} from "@/lib/inAppBrowser";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────────────────────
@@ -36,12 +43,51 @@ export default function SignInPage() {
 }
 
 function SignInContent() {
-  const { auth, ready, error, notice, signInWithGoogle, sendEmailLink } = useAuth();
+  const {
+    auth,
+    ready,
+    error,
+    notice,
+    emailLinkNeedsEmail,
+    signInWithGoogle,
+    sendEmailLink,
+    completeEmailLink,
+  } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
 
   const [googleLoading, setGoogleLoading] = useState(false);
+  /* undefined until mounted: the user agent is not known on the server, and
+     rendering the Google button first would flash it inside Instagram's
+     browser, where it can only fail. */
+  const [inApp, setInApp] = useState<InAppBrowser | null | undefined>(
+    undefined,
+  );
+  const [openUrl, setOpenUrl] = useState<string | null>(null);
+  useEffect(() => {
+    setInApp(detectInAppBrowser());
+    setOpenUrl(systemBrowserUrl(window.location.href));
+  }, []);
+
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [confirmStatus, setConfirmStatus] = useState<
+    "idle" | "working" | "error"
+  >("idle");
+  const submitConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!confirmEmail.includes("@")) {
+      setConfirmStatus("error");
+      return;
+    }
+    setConfirmStatus("working");
+    try {
+      await completeEmailLink(confirmEmail.trim());
+      /* the redirect effect takes it from here once auth resolves */
+    } catch {
+      setConfirmStatus("error");
+    }
+  };
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<EmailStatus>("idle");
 
@@ -111,7 +157,8 @@ function SignInContent() {
           <div
             className="mb-5 p-4 rounded-2xl text-center"
             style={{
-              background: "linear-gradient(160deg, rgba(255,77,79,0.10), rgba(255,77,79,0.03))",
+              background:
+                "linear-gradient(160deg, rgba(255,77,79,0.10), rgba(255,77,79,0.03))",
               border: "1px solid rgba(255,77,79,0.3)",
             }}
           >
@@ -119,8 +166,8 @@ function SignInContent() {
               className="font-display italic text-[13.5px] text-text-secondary leading-[1.5]"
               style={{ fontWeight: 300 }}
             >
-              Signed in, but we couldn&apos;t reach the hintder server. Check that
-              it&apos;s running, then try again.
+              Signed in, but we couldn&apos;t reach the hintder server. Check
+              that it&apos;s running, then try again.
             </p>
           </div>
         )}
@@ -130,7 +177,8 @@ function SignInContent() {
           <div
             className="mb-5 p-4 rounded-2xl text-center"
             style={{
-              background: "linear-gradient(160deg, rgba(254,60,114,0.10), rgba(255,133,82,0.04))",
+              background:
+                "linear-gradient(160deg, rgba(254,60,114,0.10), rgba(255,133,82,0.04))",
               border: "1px solid rgba(254,60,114,0.3)",
             }}
           >
@@ -143,128 +191,244 @@ function SignInContent() {
           </div>
         )}
 
-        {/* Google — primary auth path */}
-        <button
-          onClick={handleGoogle}
-          disabled={googleLoading}
-          className={cn(
-            "group w-full inline-flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl",
-            "bg-white text-[#1f1f1f] font-display text-[15px] transition-transform",
-            googleLoading
-              ? "opacity-70 cursor-wait"
-              : "hover:scale-[1.01] active:scale-[0.99]",
-          )}
-          style={{
-            fontWeight: 500,
-            boxShadow:
-              "0 12px 30px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.5)",
-          }}
-        >
-          {googleLoading ? (
-            <>
-              <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-              opening Google…
-            </>
-          ) : (
-            <>
-              <GoogleLogo />
-              Continue with Google
-            </>
-          )}
-        </button>
-
-        {/* OR divider */}
-        <div className="flex items-center gap-3 my-7">
-          <span className="h-px flex-1 bg-white/[0.08]" />
-          <span
-            className="font-display italic text-[11.5px] text-text-muted tracking-wide"
-            style={{ fontWeight: 300 }}
-          >
-            or with email
-          </span>
-          <span className="h-px flex-1 bg-white/[0.08]" />
-        </div>
-
-        {status !== "sent" ? (
-          <form onSubmit={submitEmail} className="space-y-3">
-            <div className="flex gap-2 sm:gap-2.5 items-stretch">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (status === "error") setStatus("idle");
-                }}
-                placeholder="your email"
-                required
-                aria-label="your email"
-                className="flex-1 min-w-0 px-4 sm:px-5 py-3.5 rounded-full bg-white/[0.03] border border-white/10 focus:border-flame/50 outline-none text-text font-display text-[14px] sm:text-[15px] transition-colors placeholder:text-text-muted/60 select-text"
-                autoComplete="email"
-              />
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                aria-label="send the link"
-                className={cn(
-                  "group inline-flex items-center justify-center gap-2 shrink-0 px-5 sm:px-6 rounded-full font-display italic text-white text-[14px] sm:text-[15px] transition-transform",
-                  status === "sending"
-                    ? "opacity-80 cursor-wait"
-                    : "hover:scale-[1.01] active:scale-[0.99]",
-                )}
-                style={{
-                  background:
-                    "linear-gradient(95deg, #FE3C72, #FF6B6B 50%, #FF8552)",
-                  boxShadow: "0 18px 40px -12px rgba(254,60,114,0.55)",
-                  fontWeight: 400,
-                }}
-              >
-                {status === "sending" ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <span className="hidden sm:inline">send link</span>
-                    <ArrowRight
-                      size={16}
-                      className="text-white transition-transform group-hover:translate-x-0.5"
-                    />
-                  </>
-                )}
-              </button>
-            </div>
-
-            {status === "error" && (
+        {emailLinkNeedsEmail ? (
+          <>
+            {/* A sign-in link opened in a different browser from the one that
+            asked for it — say the mail app handed it to Safari while the
+            request came from Instagram. We cannot know the address, so ask. */}
+            <form onSubmit={submitConfirm} className="space-y-3">
               <p
-                className="text-[12.5px] text-danger font-display italic"
+                className="font-display italic text-[14px] text-text-secondary leading-[1.5] text-center mb-2"
                 style={{ fontWeight: 300 }}
               >
-                Couldn&apos;t send the link — check the email and try again.
+                One more step: confirm the email you sent this link to.
               </p>
-            )}
-          </form>
+              <div className="flex gap-2 sm:gap-2.5 items-stretch">
+                <input
+                  type="email"
+                  value={confirmEmail}
+                  onChange={(e) => {
+                    setConfirmEmail(e.target.value);
+                    if (confirmStatus === "error") setConfirmStatus("idle");
+                  }}
+                  placeholder="your email"
+                  required
+                  aria-label="confirm your email"
+                  className="flex-1 min-w-0 px-4 sm:px-5 py-3.5 rounded-full bg-white/[0.03] border border-white/10 focus:border-flame/50 outline-none text-text font-display text-[14px] sm:text-[15px] transition-colors placeholder:text-text-muted/60 select-text"
+                  autoComplete="email"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={confirmStatus === "working"}
+                  aria-label="finish signing in"
+                  className={cn(
+                    "group inline-flex items-center justify-center gap-2 shrink-0 px-5 sm:px-6 rounded-full font-display italic text-white text-[14px] sm:text-[15px] transition-transform",
+                    confirmStatus === "working"
+                      ? "opacity-80 cursor-wait"
+                      : "hover:scale-[1.01] active:scale-[0.99]",
+                  )}
+                  style={{
+                    background:
+                      "linear-gradient(95deg, #FE3C72, #FF6B6B 50%, #FF8552)",
+                    boxShadow: "0 18px 40px -12px rgba(254,60,114,0.55)",
+                    fontWeight: 400,
+                  }}
+                >
+                  {confirmStatus === "working" ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline">sign in</span>
+                      <ArrowRight
+                        size={16}
+                        className="text-white transition-transform group-hover:translate-x-0.5"
+                      />
+                    </>
+                  )}
+                </button>
+              </div>
+              {confirmStatus === "error" && (
+                <p
+                  className="text-[12.5px] text-danger font-display italic"
+                  style={{ fontWeight: 300 }}
+                >
+                  That email doesn&apos;t match this link — use the address the
+                  link was sent to.
+                </p>
+              )}
+            </form>
+          </>
         ) : (
-          <div
-            className="p-6 rounded-2xl"
-            style={{
-              background:
-                "linear-gradient(160deg, rgba(91,227,169,0.08), rgba(91,227,169,0.02))",
-              border: "1px solid rgba(91,227,169,0.25)",
-            }}
-          >
-            <p
-              className="font-display text-[16px] text-text mb-2"
-              style={{ fontWeight: 500 }}
-            >
-              Check your inbox.
-            </p>
-            <p
-              className="font-display italic text-[13.5px] text-text-secondary leading-[1.5]"
-              style={{ fontWeight: 300 }}
-            >
-              We sent a one-time sign-in link to{" "}
-              <span className="text-text not-italic">{email}</span>. Open it on
-              this device to finish.
-            </p>
-          </div>
+          <>
+            {/* Instagram / Facebook / TikTok built-in browser. Google will not run
+            its sign-in page in here (403 disallowed_useragent), so the button
+            is not offered at all — email works, and so does leaving for the
+            real browser. */}
+            {inApp && (
+              <div
+                className="mb-6 p-4 rounded-2xl text-center"
+                style={{
+                  background:
+                    "linear-gradient(160deg, rgba(254,60,114,0.10), rgba(255,133,82,0.04))",
+                  border: "1px solid rgba(254,60,114,0.3)",
+                }}
+              >
+                <p
+                  className="font-display italic text-[13.5px] text-text-secondary leading-[1.5]"
+                  style={{ fontWeight: 300 }}
+                >
+                  You&apos;re in {inAppBrowserName(inApp)}&apos;s browser, where
+                  Google sign-in is blocked. Use your email below
+                  {openUrl ? ", or open hintder in your browser." : "."}
+                </p>
+                {openUrl && (
+                  <a
+                    href={openUrl}
+                    className="mt-3 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-[#1f1f1f] font-display text-[14px]"
+                    style={{ fontWeight: 500 }}
+                  >
+                    Open in {isAndroid() ? "Chrome" : "Safari"}
+                  </a>
+                )}
+                <p
+                  className="mt-3 font-display italic text-[12px] text-text-muted leading-[1.5]"
+                  style={{ fontWeight: 300 }}
+                >
+                  If that does nothing: tap ⋯ at the top and choose “Open in
+                  browser”.
+                </p>
+              </div>
+            )}
+
+            {/* Google — primary auth path, only where it can actually work. */}
+            {inApp === null && (
+              <>
+                <button
+                  onClick={handleGoogle}
+                  disabled={googleLoading}
+                  className={cn(
+                    "group w-full inline-flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl",
+                    "bg-white text-[#1f1f1f] font-display text-[15px] transition-transform",
+                    googleLoading
+                      ? "opacity-70 cursor-wait"
+                      : "hover:scale-[1.01] active:scale-[0.99]",
+                  )}
+                  style={{
+                    fontWeight: 500,
+                    boxShadow:
+                      "0 12px 30px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.5)",
+                  }}
+                >
+                  {googleLoading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                      opening Google…
+                    </>
+                  ) : (
+                    <>
+                      <GoogleLogo />
+                      Continue with Google
+                    </>
+                  )}
+                </button>
+
+                {/* OR divider */}
+                <div className="flex items-center gap-3 my-7">
+                  <span className="h-px flex-1 bg-white/[0.08]" />
+                  <span
+                    className="font-display italic text-[11.5px] text-text-muted tracking-wide"
+                    style={{ fontWeight: 300 }}
+                  >
+                    or with email
+                  </span>
+                  <span className="h-px flex-1 bg-white/[0.08]" />
+                </div>
+              </>
+            )}
+
+            {status !== "sent" ? (
+              <form onSubmit={submitEmail} className="space-y-3">
+                <div className="flex gap-2 sm:gap-2.5 items-stretch">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (status === "error") setStatus("idle");
+                    }}
+                    placeholder="your email"
+                    required
+                    aria-label="your email"
+                    className="flex-1 min-w-0 px-4 sm:px-5 py-3.5 rounded-full bg-white/[0.03] border border-white/10 focus:border-flame/50 outline-none text-text font-display text-[14px] sm:text-[15px] transition-colors placeholder:text-text-muted/60 select-text"
+                    autoComplete="email"
+                  />
+                  <button
+                    type="submit"
+                    disabled={status === "sending"}
+                    aria-label="send the link"
+                    className={cn(
+                      "group inline-flex items-center justify-center gap-2 shrink-0 px-5 sm:px-6 rounded-full font-display italic text-white text-[14px] sm:text-[15px] transition-transform",
+                      status === "sending"
+                        ? "opacity-80 cursor-wait"
+                        : "hover:scale-[1.01] active:scale-[0.99]",
+                    )}
+                    style={{
+                      background:
+                        "linear-gradient(95deg, #FE3C72, #FF6B6B 50%, #FF8552)",
+                      boxShadow: "0 18px 40px -12px rgba(254,60,114,0.55)",
+                      fontWeight: 400,
+                    }}
+                  >
+                    {status === "sending" ? (
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">send link</span>
+                        <ArrowRight
+                          size={16}
+                          className="text-white transition-transform group-hover:translate-x-0.5"
+                        />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {status === "error" && (
+                  <p
+                    className="text-[12.5px] text-danger font-display italic"
+                    style={{ fontWeight: 300 }}
+                  >
+                    Couldn&apos;t send the link — check the email and try again.
+                  </p>
+                )}
+              </form>
+            ) : (
+              <div
+                className="p-6 rounded-2xl"
+                style={{
+                  background:
+                    "linear-gradient(160deg, rgba(91,227,169,0.08), rgba(91,227,169,0.02))",
+                  border: "1px solid rgba(91,227,169,0.25)",
+                }}
+              >
+                <p
+                  className="font-display text-[16px] text-text mb-2"
+                  style={{ fontWeight: 500 }}
+                >
+                  Check your inbox.
+                </p>
+                <p
+                  className="font-display italic text-[13.5px] text-text-secondary leading-[1.5]"
+                  style={{ fontWeight: 300 }}
+                >
+                  We sent a one-time sign-in link to{" "}
+                  <span className="text-text not-italic">{email}</span>. Open it
+                  on this device to finish.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>
